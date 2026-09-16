@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Fábrica de Queque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1b120f;
+    --bg-panel: #241a15;
+    --bg-elevated: #2f221b;
+    --bg-inset: #150e0b;
+    --cream: #f6ead9;
+    --muted: #b8a693;
+    --line: #40302655;
+    --caramel: #e0a458;
+    --frosting: #ff8fa3;
+    --green: #7bc79e;
+    --red: #e2645c;
+    --cyan: #79c9d4;
+    --magenta: #c792ea;
+    --amber: #e0a458;
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  /* This is an intentionally dark, single-theme cabinet look (like a physical
+     arcade machine) — it stays dark in both color schemes on purpose. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { color-scheme: dark; }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: var(--font-mono);
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 28px 16px 48px;
+    background-image:
+      radial-gradient(circle at 15% 0%, #3a271d 0%, transparent 45%),
+      radial-gradient(circle at 100% 30%, #33231a 0%, transparent 40%);
+  }
+
+  .cabinet {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .titulo {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 6vw, 38px);
+    letter-spacing: 0.2px;
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  .titulo span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  .hud {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 14px;
+    min-width: 190px;
+    text-align: right;
+  }
+
+  .hud .queque-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--caramel);
+  }
+
+  .hud .queque-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .hud .rango-line {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ---------- Panel principal ---------- */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .panel-top {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .panel-top h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .volver {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .volver:hover { border-color: var(--caramel); color: var(--caramel); }
+
+  .panel-body { padding: 18px; }
+
+  /* ---------- Grilla de juegos (menu) ---------- */
+  .grid-juegos {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 460px) {
+    .grid-juegos { grid-template-columns: 1fr; }
+  }
+
+  .ficha {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px;
+    text-align: left;
+    cursor: pointer;
+    color: var(--cream);
+    font-family: var(--font-mono);
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .ficha:hover { border-color: var(--caramel); transform: translateY(-1px); }
+  .ficha:active { transform: translateY(0); }
+
+  .ficha .emoji { font-size: 24px; display: block; margin-bottom: 8px; }
+  .ficha .nombre { font-weight: 600; font-size: 14px; display: block; margin-bottom: 4px; }
+  .ficha .detalle { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+
+  /* ---------- Log de juego (estilo consola) ---------- */
+  .log {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px;
+    min-height: 140px;
+    max-height: 320px;
+    overflow-y: auto;
+    font-size: 13.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .log p { margin: 0 0 6px; }
+  .log p:last-child { margin-bottom: 0; }
+
+  .ok { color: var(--green); }
+  .fail { color: var(--red); }
+  .warn { color: var(--amber); }
+  .info { color: var(--cyan); }
+  .accent { color: var(--frosting); }
+
+  /* ---------- Controles ---------- */
+  .controles {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  input[type="number"], input[type="text"] {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    color: var(--cream);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 9px 10px;
+    border-radius: 3px;
+    width: 130px;
+  }
+  input:focus, button:focus-visible {
+    outline: 2px solid var(--caramel);
+    outline-offset: 1px;
+  }
+
+  button.btn {
+    background: var(--caramel);
+    color: #241a15;
+    border: none;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 9px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  button.btn:hover { filter: brightness(1.08); }
+  button.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  button.btn.secundario {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--cream);
+  }
+  button.btn.secundario:hover { border-color: var(--frosting); color: var(--frosting); }
+
+  button.opcion {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    color: var(--cream);
+    font-family: var(--font-mono);
+    font-size: 20px;
+    padding: 10px 14px;
+    border-radius: 3px;
+    cursor: pointer;
+    min-width: 54px;
+  }
+  button.opcion:hover { border-color: var(--caramel); }
+
+  /* ---------- Cartas (blackjack) ---------- */
+  .mesa { margin-bottom: 12px; }
+  .mesa-titulo { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 6px; }
+  .mano { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+
+  .carta {
+    width: 42px;
+    height: 58px;
+    background: var(--cream);
+    color: #1b120f;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.1;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+  }
+  .carta.roja { color: #b3312c; }
+  .carta.oculta {
+    background: repeating-linear-gradient(45deg, var(--caramel), var(--caramel) 4px, #c98d3e 4px, #c98d3e 8px);
+    color: transparent;
+  }
+  .carta small { font-size: 16px; }
+
+  .total-linea { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .total-linea b { color: var(--cream); }
+
+  /* ---------- Tres en raya ---------- */
+  .tablero-trip {
+    display: grid;
+    grid-template-columns: repeat(3, 64px);
+    grid-template-rows: repeat(3, 64px);
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .celda {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 28px;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--cream);
+  }
+  .celda:disabled { cursor: default; }
+  .celda.x { color: var(--frosting); }
+  .celda.o { color: var(--cyan); }
+
+  /* ---------- Memoria ---------- */
+  .secuencia-display {
+    font-family: var(--font-mono);
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    text-align: center;
+    padding: 18px 0;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+    margin-top: 20px;
+  }
+
+  .reset-link {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+  .reset-link:hover { color: var(--red); }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+
+  <header>
+    <h1 class="titulo">🍰 La Fábrica<br>de Queque<span>arcade casero de queque</span></h1>
+    <div class="hud">
+      <div class="queque-label">QUEQUE ACTUAL</div>
+      <div class="queque-num" id="quequeNum">0</div>
+      <div class="rango-line" id="rangoLine"></div>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="panel-top">
+      <h2 id="panelTitulo">Elige un juego</h2>
+      <button class="volver" id="btnVolver" style="display:none;">◀ Volver al menú</button>
+    </div>
+    <div class="panel-body" id="panelBody">
+      <!-- se llena por JS -->
+    </div>
+  </div>
+
+  <footer>
+    hecho con harina, azúcar y un poco de random() &middot;
+    <button class="reset-link" id="btnReset">reiniciar mi queque</button>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- Estado global ----------------
+  let queque = 0;
+  try {
+    const guardado = localStorage.getItem("queque-actual");
+    if (guardado !== null && !Number.isNaN(parseInt(guardado, 10))) {
+      queque = parseInt(guardado, 10);
+    }
+  } catch (e) { /* sin localStorage, arrancamos en 0 */ }
+
+  function guardarQueque() {
+    try { localStorage.setItem("queque-actual", String(queque)); } catch (e) {}
+  }
+
+  function sumarQueque(n) {
+    queque += n;
+    guardarQueque();
+    actualizarHUD();
+  }
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function esperar(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  // ---------------- Rangos ----------------
+  function getRango(q) {
+    if (q < 0)       return { label: "Queque Masticado",  emoji: "💔💀", color: "var(--red)" };
+    if (q <= 500)    return { label: "Queque de Vainilla", emoji: "🍰🚶", color: "var(--muted)" };
+    if (q <= 5000)   return { label: "Experto en Queque",  emoji: "🧭🏃", color: "var(--green)" };
+    if (q <= 50000)  return { label: "Maestro del Queque", emoji: "🧑\u200d🍳🔥", color: "var(--amber)" };
+    if (q <= 1000000) return { label: "Genio del Queque",  emoji: "🧠🌟", color: "var(--cyan)" };
+    return { label: "Dios del Queque", emoji: "👑🌌", color: "var(--magenta)" };
+  }
+
+  function actualizarHUD() {
+    document.getElementById("quequeNum").textContent = queque;
+    const r = getRango(queque);
+    const el = document.getElementById("rangoLine");
+    el.style.color = r.color;
+    el.textContent = r.emoji + " " + r.label;
+  }
+
+  // ---------------- Utilidades de UI ----------------
+  const panelTitulo = document.getElementById("panelTitulo");
+  const panelBody = document.getElementById("panelBody");
+  const btnVolver = document.getElementById("btnVolver");
+
+  function setTitulo(t) { panelTitulo.textContent = t; }
+
+  function mostrarVolver(mostrar) {
+    btnVolver.style.display = mostrar ? "inline-block" : "none";
+  }
+
+  function crearLog() {
+    const div = document.createElement("div");
+    div.className = "log";
+    return div;
+  }
+
+  function logMsg(logEl, html, clase) {
+    const p = document.createElement("p");
+    if (clase) p.className = clase;
+    p.innerHTML = html;
+    logEl.appendChild(p);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function crearControles() {
+    const div = document.createElement("div");
+    div.className = "controles";
+    return div;
+  }
+
+  // ================================================================
+  // MENU PRINCIPAL
+  // ================================================================
+  const JUEGOS = [
+    { id: "numero",  emoji: "🔢",    nombre: "Adivina el número",      detalle: "1 al 20, 5 intentos" },
+    { id: "rpt",     emoji: "✊✋✌️", nombre: "Piedra, papel o tijera", detalle: "contra la máquina" },
+    { id: "parimpar",emoji: "🎲",    nombre: "Apostar a par o impar",  detalle: "duplica tu apuesta" },
+    { id: "blackjack",emoji: "🃏",   nombre: "Blackjack",              detalle: "contra la casa, hasta 21" },
+    { id: "memoria", emoji: "🧠",    nombre: "Memoria de queque",      detalle: "8 rondas, no mires el historial" },
+    { id: "triqui",  emoji: "⭕❌",  nombre: "Tres en raya",           detalle: "la máquina no es tonta" },
+    { id: "rango",   emoji: "📊",    nombre: "Ver mi rango",           detalle: "estado actual" },
+  ];
+
+  function mostrarMenu() {
+    setTitulo("Elige un juego");
+    mostrarVolver(false);
+    panelBody.innerHTML = "";
+
+    const grid = document.createElement("div");
+    grid.className = "grid-juegos";
+
+    JUEGOS.forEach((j) => {
+      const btn = document.createElement("button");
+      btn.className = "ficha";
+      btn.innerHTML =
+        '<span class="emoji">' + j.emoji + "</span>" +
+        '<span class="nombre">' + j.nombre + "</span>" +
+        '<span class="detalle">' + j.detalle + "</span>";
+      btn.addEventListener("click", () => abrirJuego(j.id));
+      grid.appendChild(btn);
+    });
+
+    panelBody.appendChild(grid);
+  }
+
+  function abrirJuego(id) {
+    mostrarVolver(true);
+    panelBody.innerHTML = "";
+
+    switch (id) {
+      case "numero":     juegoAdivinaNumero(); break;
+      case "rpt":        juegoPiedraPapelTijera(); break;
+      case "parimpar":   juegoParImpar(); break;
+      case "blackjack":  juegoBlackjack(); break;
+      case "memoria":    juegoMemoria(); break;
+      case "triqui":     juegoTresEnRaya(); break;
+      case "rango":      juegoVerRango(); break;
+    }
+  }
+
+  btnVolver.addEventListener("click", mostrarMenu);
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    if (confirm("¿Reiniciar tu queque a 0?")) {
+      queque = 0;
+      guardarQueque();
+      actualizarHUD();
+      mostrarMenu();
+    }
+  });
+
+  // ================================================================
+  // JUEGO 1: ADIVINA EL NÚMERO
+  // ================================================================
+  function juegoAdivinaNumero() {
+    setTitulo("🔢 Adivina el número");
+    const log = crearLog();
+    const controles = crearControles();
+    panelBody.appendChild(log);
+    panelBody.appendChild(controles);
+
+    const secreto = randInt(1, 20);
+    let intentosRestantes = 5;
+
+    logMsg(log, "Pensé un número del 1 al 20. Tienes 5 intentos.", "info");
+
+    function render() {
+      controles.innerHTML = "";
+      if (intentosRestantes <= 0) return;
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.min = "1"; input.max = "20";
+      input.placeholder = "1-20";
+
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "Adivinar (" + intentosRestantes + " restantes)";
+
+      function intentar() {
+        const val = parseInt(input.value, 10);
+        if (Number.isNaN(val)) return;
+
+        if (val === secreto) {
+          const premio = intentosRestantes * 200;
+          logMsg(log, "Correcto, era el " + secreto + ". Ganaste <b>+" + premio + "</b> de queque.", "ok");
+          sumarQueque(premio);
+          intentosRestantes = 0;
+          render();
+          return;
+        }
+
+        logMsg(log, val + " → mi número es " + (val < secreto ? "MAYOR" : "MENOR") + ".");
+        intentosRestantes--;
+
+        if (intentosRestantes <= 0) {
+          logMsg(log, "Se acabaron los intentos. Era el " + secreto + ". Pierdes <b>-100</b> de queque.", "fail");
+          sumarQueque(-100);
+        }
+        render();
+        input.value = "";
+      }
+
+      btn.addEventListener("click", intentar);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") intentar(); });
+
+      controles.appendChild(input);
+      controles.appendChild(btn);
+      input.focus();
+    }
+
+    render();
+  }
+
+  // ================================================================
+  // JUEGO 2: PIEDRA, PAPEL O TIJERA
+  // ================================================================
+  function juegoPiedraPapelTijera() {
+    setTitulo("✊✋✌️ Piedra, papel o tijera");
+    const log = crearLog();
+    const controles = crearControles();
+    panelBody.appendChild(log);
+    panelBody.appendChild(controles);
+
+    const opciones = [
+      { id: 0, nombre: "Piedra", emoji: "✊" },
+      { id: 1, nombre: "Papel",  emoji: "✋" },
+      { id: 2, nombre: "Tijera", emoji: "✌️" },
+    ];
+
+    logMsg(log, "Elige tu jugada.", "info");
+
+    function jugar(tu) {
+      const yo = randInt(0, 2);
+      logMsg(log, "Tú: " + opciones[tu].emoji + " " + opciones[tu].nombre +
+        " &nbsp;|&nbsp; Yo: " + opciones[yo].emoji + " " + opciones[yo].nombre);
+
+      if (tu === yo) {
+        logMsg(log, "Empate. Nadie gana queque.", "warn");
+      } else if ((tu === 0 && yo === 2) || (tu === 1 && yo === 0) || (tu === 2 && yo === 1)) {
+        logMsg(log, "Ganaste! <b>+300</b> de queque.", "ok");
+        sumarQueque(300);
+      } else {
+        logMsg(log, "Perdiste. <b>-150</b> de queque.", "fail");
+        sumarQueque(-150);
+      }
+    }
+
+    opciones.forEach((o) => {
+      const btn = document.createElement("button");
+      btn.className = "opcion";
+      btn.textContent = o.emoji;
+      btn.title = o.nombre;
+      btn.addEventListener("click", () => jugar(o.id));
+      controles.appendChild(btn);
+    });
+  }
+
+  // ================================================================
+  // JUEGO 3: PAR O IMPAR (APUESTA)
+  // ================================================================
+  function juegoParImpar() {
+    setTitulo("🎲 Par o impar");
+    const log = crearLog();
+    const controles = crearControles();
+    panelBody.appendChild(log);
+    panelBody.appendChild(controles);
+
+    logMsg(log, "Tienes " + queque + " de queque. Elige cuánto apostar.", "info");
+
+    function renderApuesta() {
+      controles.innerHTML = "";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.placeholder = "cantidad";
+
+      const btnPar = document.createElement("button");
+      btnPar.className = "btn";
+      btnPar.textContent = "Apostar a PAR";
+
+      const btnImpar = document.createElement("button");
+      btnImpar.className = "btn secundario";
+      btnImpar.textContent = "Apostar a IMPAR";
+
+      function jugar(eleccion) {
+        const apuesta = parseInt(input.value, 10);
+        if (Number.isNaN(apuesta) || apuesta <= 0 || apuesta > queque) {
+          logMsg(log, "Apuesta inválida (tienes " + queque + ").", "fail");
+          return;
+        }
+        const dado = randInt(1, 100);
+        logMsg(log, "Apostaste " + apuesta + " a " + (eleccion === 0 ? "PAR" : "IMPAR") + ". Salió: <b>" + dado + "</b>");
+
+        if (dado % 2 === eleccion) {
+          logMsg(log, "Acertaste! Duplicas tu apuesta: <b>+" + apuesta + "</b>", "ok");
+          sumarQueque(apuesta);
+        } else {
+          logMsg(log, "Fallaste. <b>-" + apuesta + "</b>", "fail");
+          sumarQueque(-apuesta);
+        }
+        input.value = "";
+      }
+
+      btnPar.addEventListener("click", () => jugar(0));
+      btnImpar.addEventListener("click", () => jugar(1));
+
+      controles.appendChild(input);
+      controles.appendChild(btnPar);
+      controles.appendChild(btnImpar);
+    }
+
+    renderApuesta();
+  }
+
+  // ================================================================
+  // JUEGO 4: BLACKJACK
+  // ================================================================
+  function nombreCarta(v) {
+    if (v === 1) return "A";
+    if (v === 11) return "J";
+    if (v === 12) return "Q";
+    if (v === 13) return "K";
+    return String(v);
+  }
+  function valorCarta(v) {
+    if (v === 1) return 11;
+    if (v > 10) return 10;
+    return v;
+  }
+  function sacarCarta() {
+    const palos = ["♠", "♥", "♦", "♣"];
+    return { valor: randInt(1, 13), palo: palos[randInt(0, 3)] };
+  }
+  function calcTotal(mano) {
+    let total = 0, ases = 0;
+    mano.forEach((c) => {
+      if (c.valor === 1) ases++;
+      total += valorCarta(c.valor);
+    });
+    while (total > 21 && ases > 0) { total -= 10; ases--; }
+    return total;
+  }
+  function cartaHTML(c, oculta) {
+    if (oculta) return '<div class="carta oculta">?</div>';
+    const roja = (c.palo === "♥" || c.palo === "♦") ? " roja" : "";
+    return '<div class="carta' + roja + '"><small>' + nombreCarta(c.valor) + '</small>' + c.palo + '</div>';
+  }
+
+  function juegoBlackjack() {
+    setTitulo("🃏 Blackjack");
+    const log = crearLog();
+    const mesaJugador = document.createElement("div");
+    const mesaCasa = document.createElement("div");
+    const controles = crearControles();
+
+    panelBody.appendChild(log);
+    panelBody.appendChild(mesaCasa);
+    panelBody.appendChild(mesaJugador);
+    panelBody.appendChild(controles);
+
+    logMsg(log, "Tienes " + queque + " de queque. ¿Cuánto apuestas?", "info");
+
+    let jugador = [], casa = [], apuesta = 0, terminado = false;
+
+    function pintarMesas(ocultarCasa) {
+      mesaCasa.innerHTML =
+        '<div class="mesa mesa-casa"><div class="mesa-titulo">CASA</div><div class="mano">' +
+        casa.map((c, i) => cartaHTML(c, ocultarCasa && i === 1)).join("") +
+        '</div><div class="total-linea">' +
+        (ocultarCasa ? "muestra " + valorCarta(casa[0].valor) : "total <b>" + calcTotal(casa) + "</b>") +
+        '</div></div>';
+
+      mesaJugador.innerHTML =
+        '<div class="mesa mesa-jugador"><div class="mesa-titulo">TÚ</div><div class="mano">' +
+        jugador.map((c) => cartaHTML(c, false)).join("") +
+        '</div><div class="total-linea">total <b>' + calcTotal(jugador) + '</b></div></div>';
+    }
+
+    function renderApuesta() {
+      controles.innerHTML = "";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.placeholder = "apuesta";
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "Repartir";
+      btn.addEventListener("click", () => {
+        const v = parseInt(input.value, 10);
+        if (Number.isNaN(v) || v <= 0 || v > queque) {
+          logMsg(log, "Apuesta inválida.", "fail");
+          return;
+        }
+        apuesta = v;
+        repartir();
+      });
+      controles.appendChild(input);
+      controles.appendChild(btn);
+    }
+
+    function repartir() {
+      jugador = [sacarCarta(), sacarCarta()];
+      casa = [sacarCarta(), sacarCarta()];
+      pintarMesas(true);
+
+      if (calcTotal(jugador) === 21) {
+        const premio = apuesta + Math.floor(apuesta / 2);
+        logMsg(log, "BLACKJACK natural! Ganas <b>+" + premio + "</b>", "ok");
+        sumarQueque(premio);
+        finDeRonda();
+        return;
+      }
+      renderTurnoJugador();
+    }
+
+    function renderTurnoJugador() {
+      controles.innerHTML = "";
+      const btnPedir = document.createElement("button");
+      btnPedir.className = "btn";
+      btnPedir.textContent = "Pedir carta";
+      const btnPlantarse = document.createElement("button");
+      btnPlantarse.className = "btn secundario";
+      btnPlantarse.textContent = "Plantarse";
+
+      btnPedir.addEventListener("click", () => {
+        jugador.push(sacarCarta());
+        pintarMesas(true);
+        const t = calcTotal(jugador);
+        if (t > 21) {
+          logMsg(log, "Te pasaste con " + t + ". Pierdes <b>-" + apuesta + "</b>", "fail");
+          sumarQueque(-apuesta);
+          finDeRonda();
+        } else if (t === 21) {
+          turnoCasa();
+        }
+      });
+
+      btnPlantarse.addEventListener("click", turnoCasa);
+
+      controles.appendChild(btnPedir);
+      controles.appendChild(btnPlantarse);
+    }
+
+    function turnoCasa() {
+      controles.innerHTML = "";
+      pintarMesas(false);
+      while (calcTotal(casa) < 17) casa.push(sacarCarta());
+      pintarMesas(false);
+
+      const tj = calcTotal(jugador), tc = calcTotal(casa);
+      logMsg(log, "Tú: " + tj + " &nbsp;|&nbsp; Casa: " + tc);
+
+      if (tc > 21 || tj > tc) {
+        logMsg(log, "Ganaste! <b>+" + apuesta + "</b>", "ok");
+        sumarQueque(apuesta);
+      } else if (tj === tc) {
+        logMsg(log, "Empate. Recuperas tu apuesta.", "warn");
+      } else {
+        logMsg(log, "Gana la casa. <b>-" + apuesta + "</b>", "fail");
+        sumarQueque(-apuesta);
+      }
+      finDeRonda();
+    }
+
+    function finDeRonda() {
+      controles.innerHTML = "";
+      const btn = document.createElement("button");
+      btn.className = "btn secundario";
+      btn.textContent = "Jugar otra mano";
+      btn.addEventListener("click", () => {
+        log.innerHTML = "";
+        logMsg(log, "Tienes " + queque + " de queque. ¿Cuánto apuestas?", "info");
+        mesaCasa.innerHTML = ""; mesaJugador.innerHTML = "";
+        renderApuesta();
+      });
+      controles.appendChild(btn);
+    }
+
+    renderApuesta();
+  }
+
+  // ================================================================
+  // JUEGO 5: MEMORIA DE QUEQUE
+  // ================================================================
+  function juegoMemoria() {
+    setTitulo("🧠 Memoria de queque");
+    const log = crearLog();
+    const display = document.createElement("div");
+    display.className = "secuencia-display";
+    const controles = crearControles();
+
+    panelBody.appendChild(log);
+    panelBody.appendChild(display);
+    panelBody.appendChild(controles);
+
+    logMsg(log, "Vas a ver una secuencia por unos segundos y luego se oculta.", "info");
+
+    let secuencia = "";
+    let ronda = 0;
+    let ganado = 0;
+    const RONDAS_MAX = 8;
+
+    async function siguienteRonda() {
+      ronda++;
+      secuencia += String(randInt(0, 9));
+      controles.innerHTML = "";
+      display.textContent = "preparate…";
+
+      await esperar(700);
+      display.textContent = secuencia;
+      await esperar(900 + 350 * ronda);
+      display.textContent = "· · ·";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "escribe la secuencia";
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "Confirmar";
+
+      function confirmar() {
+        if (input.value.trim() === secuencia) {
+          ganado += ronda * 150;
+          logMsg(log, "Ronda " + ronda + " correcta. Llevas <b>" + ganado + "</b> de queque en esta partida.", "ok");
+          if (ronda >= RONDAS_MAX) {
+            logMsg(log, "Completaste las " + RONDAS_MAX + " rondas! Bono de 5000.", "accent");
+            sumarQueque(ganado + 5000);
+            terminarPartida();
+          } else {
+            siguienteRonda();
+          }
+        } else {
+          logMsg(log, "Error, era " + secuencia + ".", "fail");
+          if (ganado === 0) {
+            logMsg(log, "No memorizaste nada. <b>-100</b> de queque.", "fail");
+            sumarQueque(-100);
+          } else {
+            logMsg(log, "Te vas con <b>" + ganado + "</b> de queque.", "warn");
+            sumarQueque(ganado);
+          }
+          terminarPartida();
+        }
+      }
+
+      btn.addEventListener("click", confirmar);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") confirmar(); });
+
+      controles.appendChild(input);
+      controles.appendChild(btn);
+      input.focus();
+    }
+
+    function terminarPartida() {
+      controles.innerHTML = "";
+      display.textContent = "";
+      const btn = document.createElement("button");
+      btn.className = "btn secundario";
+      btn.textContent = "Jugar otra vez";
+      btn.addEventListener("click", () => {
+        log.innerHTML = "";
+        logMsg(log, "Vas a ver una secuencia por unos segundos y luego se oculta.", "info");
+        secuencia = ""; ronda = 0; ganado = 0;
+        siguienteRonda();
+      });
+      controles.appendChild(btn);
+    }
+
+    siguienteRonda();
+  }
+
+  // ================================================================
+  // JUEGO 6: TRES EN RAYA
+  // ================================================================
+  const LINEAS = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6],
+  ];
+
+  function hayGanador(t) {
+    for (const [a,b,c] of LINEAS) {
+      if (t[a] && t[a] === t[b] && t[b] === t[c]) return t[a];
+    }
+    return null;
+  }
+
+  function buscarJugada(t, ficha) {
+    for (let i = 0; i < 9; i++) {
+      if (!t[i]) {
+        t[i] = ficha;
+        const gana = hayGanador(t) === ficha;
+        t[i] = null;
+        if (gana) return i;
+      }
+    }
+    return -1;
+  }
+
+  function jugadaMaquina(t) {
+    let pos = buscarJugada(t, "O");
+    if (pos !== -1) return pos;
+    pos = buscarJugada(t, "X");
+    if (pos !== -1) return pos;
+    if (!t[4]) return 4;
+    for (const e of [0,2,6,8]) if (!t[e]) return e;
+    do { pos = randInt(0, 8); } while (t[pos]);
+    return pos;
+  }
+
+  function juegoTresEnRaya() {
+    setTitulo("⭕❌ Tres en raya");
+    const log = crearLog();
+    const tableroDiv = document.createElement("div");
+    tableroDiv.className = "tablero-trip";
+    const controles = crearControles();
+
+    panelBody.appendChild(log);
+    panelBody.appendChild(tableroDiv);
+    panelBody.appendChild(controles);
+
+    logMsg(log, "Eres X. Ganar paga 1200, empatar 200, perder cuesta 400.", "info");
+
+    let tablero = Array(9).fill(null);
+    let terminado = false;
+
+    function pintar() {
+      tableroDiv.innerHTML = "";
+      tablero.forEach((v, i) => {
+        const b = document.createElement("button");
+        b.className = "celda" + (v === "X" ? " x" : v === "O" ? " o" : "");
+        b.textContent = v === "X" ? "✕" : v === "O" ? "○" : "";
+        b.disabled = !!v || terminado;
+        b.addEventListener("click", () => jugarCelda(i));
+        tableroDiv.appendChild(b);
+      });
+    }
+
+    function finalizar(msg, clase, puntos) {
+      terminado = true;
+      logMsg(log, msg, clase);
+      sumarQueque(puntos);
+      pintar();
+      const btn = document.createElement("button");
+      btn.className = "btn secundario";
+      btn.textContent = "Jugar otra vez";
+      btn.addEventListener("click", () => {
+        log.innerHTML = "";
+        logMsg(log, "Eres X. Ganar paga 1200, empatar 200, perder cuesta 400.", "info");
+        tablero = Array(9).fill(null);
+        terminado = false;
+        controles.innerHTML = "";
+        pintar();
+      });
+      controles.innerHTML = "";
+      controles.appendChild(btn);
+    }
+
+    function jugarCelda(i) {
+      if (tablero[i] || terminado) return;
+      tablero[i] = "X";
+
+      if (hayGanador(tablero) === "X") { pintar(); finalizar("Ganaste! +1200 de queque.", "ok", 1200); return; }
+      if (tablero.every((c) => c)) { pintar(); finalizar("Empate. +200 de queque.", "warn", 200); return; }
+
+      pintar();
+      setTimeout(() => {
+        const pos = jugadaMaquina(tablero);
+        tablero[pos] = "O";
+
+        if (hayGanador(tablero) === "O") { pintar(); finalizar("Ganó la máquina. -400 de queque.", "fail", -400); return; }
+        if (tablero.every((c) => c)) { pintar(); finalizar("Empate. +200 de queque.", "warn", 200); return; }
+        pintar();
+      }, 450);
+    }
+
+    pintar();
+  }
+
+  // ================================================================
+  // JUEGO 7: VER MI RANGO
+  // ================================================================
+  function juegoVerRango() {
+    setTitulo("📊 Tu rango");
+    const log = crearLog();
+    panelBody.appendChild(log);
+
+    const r = getRango(queque);
+    logMsg(log, "Tienes <b>" + queque + "</b> de queque.");
+    logMsg(log, 'Eres rango <b style="color:' + r.color + '">' + r.emoji + " " + r.label + "</b>");
+
+    const escalones = [
+      { min: -Infinity, max: -1,      label: "Queque Masticado 💔💀" },
+      { min: 0,         max: 500,     label: "Queque de Vainilla 🍰🚶" },
+      { min: 501,       max: 5000,    label: "Experto en Queque 🧭🏃" },
+      { min: 5001,      max: 50000,   label: "Maestro del Queque 🧑\u200d🍳🔥" },
+      { min: 50001,     max: 1000000, label: "Genio del Queque 🧠🌟" },
+      { min: 1000001,   max: Infinity,label: "Dios del Queque 👑🌌" },
+    ];
+    logMsg(log, "&nbsp;");
+    logMsg(log, "Escala completa de rangos:", "info");
+    escalones.forEach((e) => {
+      const activo = queque >= e.min && queque <= e.max;
+      logMsg(log, (activo ? "→ " : "&nbsp;&nbsp;") + e.label, activo ? "accent" : "");
+    });
+  }
+
+  // ---------------- Arranque ----------------
+  actualizarHUD();
+  mostrarMenu();
+})();
+</script>
+</body>
+</html>
