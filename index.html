@@ -263,30 +263,6 @@
   }
   button.opcion:hover { border-color: var(--caramel); }
 
-
-  /* ---------- Ranking global ---------- */
-  .ranking-box {
-    background: var(--bg-inset);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 14px;
-  }
-  .ranking-status { padding: 10px 12px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); }
-  .ranking-list { list-style: none; margin: 0; padding: 0; }
-  .ranking-item {
-    display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center;
-    padding: 11px 12px; border-bottom: 1px solid var(--line);
-  }
-  .ranking-item:last-child { border-bottom: none; }
-  .ranking-pos { font-weight: 700; color: var(--caramel); text-align: center; }
-  .ranking-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ranking-score { font-weight: 700; color: var(--cream); white-space: nowrap; }
-  .ranking-you { background: #3a271d; }
-  .nombre-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
-  .nombre-row input { flex:1; min-width:180px; }
-  .mini { font-size:11px; color:var(--muted); }
-
   /* ---------- Cartas (blackjack) ---------- */
   .mesa { margin-bottom: 12px; }
   .mesa-titulo { font-size: 11px; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 6px; }
@@ -404,78 +380,11 @@
 
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-
-  // ================================================================
-  // FIREBASE: PEGÁ ACÁ LA CONFIGURACIÓN DE TU PROYECTO
-  // Firebase Console > Project settings > Your apps > Web app
-  // ================================================================
-  const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_PROYECTO.firebaseapp.com",
-    projectId: "TU_PROJECT_ID",
-    storageBucket: "TU_PROJECT_ID.firebasestorage.app",
-    messagingSenderId: "TU_MESSAGING_SENDER_ID",
-    appId: "TU_APP_ID"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  window.FirebaseRanking = { app, auth, db, doc, setDoc, onSnapshot, collection, query, orderBy, limit, signInAnonymously, onAuthStateChanged, configured: firebaseConfig.apiKey !== "TU_API_KEY" };
-</script>
 <script>
 (function () {
   "use strict";
 
-  // ---------------- Firebase / Ranking global ----------------
-  const FB = window.FirebaseRanking;
-  let firebaseUser = null;
-  let nombreJugador = "Jugador";
-  let rankingUnsubscribe = null;
-
-  try {
-    nombreJugador = localStorage.getItem("nombre-jugador") || "Jugador";
-  } catch (e) {}
-
-  function limpiarNombre(nombre) {
-    return String(nombre || "Jugador").trim().replace(/[^a-zA-Z0-9ÁÉÍÓÚáéíóúÑñ _-]/g, "").slice(0, 20) || "Jugador";
-  }
-
-  function iniciarFirebase() {
-    if (!FB || !FB.configured) return;
-    FB.signInAnonymously(FB.auth).catch((error) => {
-      console.error("Firebase Auth:", error);
-    });
-    FB.onAuthStateChanged(FB.auth, (user) => {
-      firebaseUser = user;
-      if (user) guardarRanking();
-    });
-  }
-
-  async function guardarRanking() {
-    if (!firebaseUser || !FB) return;
-    try {
-      const ref = FB.doc(FB.db, "ranking", firebaseUser.uid);
-      await FB.setDoc(ref, {
-        nombre: nombreJugador,
-        queque: Number(queque) || 0,
-        actualizado: Date.now()
-      }, { merge: true });
-    } catch (error) {
-      console.error("No se pudo guardar el ranking:", error);
-    }
-  }
-
-  function actualizarRankingDespuesDeCambio() {
-    if (firebaseUser) guardarRanking();
-  }
-
-  // ---------------- Estado global
+  // ---------------- Estado global ----------------
   let queque = 0;
   try {
     const guardado = localStorage.getItem("queque-actual");
@@ -492,7 +401,6 @@
     queque += n;
     guardarQueque();
     actualizarHUD();
-    actualizarRankingDespuesDeCambio();
   }
 
   function randInt(min, max) {
@@ -563,7 +471,6 @@
     { id: "memoria", emoji: "🧠",    nombre: "Memoria de queque",      detalle: "8 rondas, no mires el historial" },
     { id: "triqui",  emoji: "⭕❌",  nombre: "Tres en raya",           detalle: "la máquina no es tonta" },
     { id: "rango",   emoji: "📊",    nombre: "Ver mi rango",           detalle: "estado actual" },
-    { id: "ranking", emoji: "🏆",    nombre: "Ranking global",           detalle: "Top 20 jugadores" },
   ];
 
   function mostrarMenu() {
@@ -600,7 +507,6 @@
       case "memoria":    juegoMemoria(); break;
       case "triqui":     juegoTresEnRaya(); break;
       case "rango":      juegoVerRango(); break;
-      case "ranking":   juegoRanking(); break;
     }
   }
 
@@ -611,7 +517,6 @@
       queque = 0;
       guardarQueque();
       actualizarHUD();
-      actualizarRankingDespuesDeCambio();
       mostrarMenu();
     }
   });
@@ -1170,95 +1075,10 @@
     });
   }
 
-
-  // ================================================================
-  // JUEGO 8: RANKING GLOBAL
-  // ================================================================
-  function juegoRanking() {
-    setTitulo("🏆 Ranking global");
-
-    const nombreRow = document.createElement("div");
-    nombreRow.className = "nombre-row";
-    const nombreInput = document.createElement("input");
-    nombreInput.type = "text";
-    nombreInput.maxLength = 20;
-    nombreInput.value = nombreJugador;
-    nombreInput.placeholder = "Tu nombre";
-    const guardarBtn = document.createElement("button");
-    guardarBtn.className = "btn";
-    guardarBtn.textContent = "Guardar nombre";
-    const nota = document.createElement("div");
-    nota.className = "mini";
-    nota.textContent = "Máximo 20 caracteres";
-    nombreRow.appendChild(nombreInput);
-    nombreRow.appendChild(guardarBtn);
-    nombreRow.appendChild(nota);
-    panelBody.appendChild(nombreRow);
-
-    const box = document.createElement("div");
-    box.className = "ranking-box";
-    const status = document.createElement("div");
-    status.className = "ranking-status";
-    const list = document.createElement("ol");
-    list.className = "ranking-list";
-    box.appendChild(status);
-    box.appendChild(list);
-    panelBody.appendChild(box);
-
-    function pintarRanking(jugadores) {
-      list.innerHTML = "";
-      if (!jugadores.length) {
-        status.textContent = "Todavía no hay jugadores en el ranking.";
-        return;
-      }
-      jugadores.forEach((j, i) => {
-        const li = document.createElement("li");
-        li.className = "ranking-item" + (firebaseUser && j.id === firebaseUser.uid ? " ranking-you" : "");
-        const pos = i + 1;
-        const medalla = pos === 1 ? "🥇" : pos === 2 ? "🥈" : pos === 3 ? "🥉" : "#" + pos;
-        li.innerHTML = '<span class="ranking-pos">' + medalla + '</span>' +
-          '<span class="ranking-name">' + escaparHTML(j.nombre || "Jugador") + '</span>' +
-          '<span class="ranking-score">' + formatearNumero(j.queque) + ' 🍰</span>';
-        list.appendChild(li);
-      });
-      status.textContent = "Top " + jugadores.length + " · se actualiza automáticamente";
-    }
-
-    guardarBtn.addEventListener("click", () => {
-      nombreJugador = limpiarNombre(nombreInput.value);
-      nombreInput.value = nombreJugador;
-      try { localStorage.setItem("nombre-jugador", nombreJugador); } catch (e) {}
-      guardarRanking();
-    });
-
-    if (!FB || !FB.configured) {
-      status.textContent = "Firebase todavía no está configurado. Completá firebaseConfig en el código.";
-      return;
-    }
-
-    if (rankingUnsubscribe) rankingUnsubscribe();
-    const q = FB.query(FB.collection(FB.db, "ranking"), FB.orderBy("queque", "desc"), FB.limit(20));
-    rankingUnsubscribe = FB.onSnapshot(q, (snapshot) => {
-      const jugadores = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      pintarRanking(jugadores);
-    }, (error) => {
-      console.error(error);
-      status.textContent = "No se pudo cargar el ranking. Revisá las reglas de Firestore.";
-    });
-  }
-
-  function formatearNumero(n) {
-    return Number(n || 0).toLocaleString("es-AR");
-  }
-
-  function escaparHTML(texto) {
-    const div = document.createElement("div");
-    div.textContent = String(texto);
-    return div.innerHTML;
-  }
-
   // ---------------- Arranque ----------------
   actualizarHUD();
   mostrarMenu();
-  iniciarFirebase();
 })();
+</script>
+</body>
+</html>
