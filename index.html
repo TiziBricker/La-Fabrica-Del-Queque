@@ -492,12 +492,52 @@
 
   // ---------------- Rangos ----------------
   function getRango(q) {
-    if (q < 0)       return { label: "Queque Masticado",  emoji: "💔💀", color: "var(--red)" };
-    if (q <= 500)    return { label: "Queque de Vainilla", emoji: "🍰🚶", color: "var(--muted)" };
-    if (q <= 5000)   return { label: "Experto en Queque",  emoji: "🧭🏃", color: "var(--green)" };
-    if (q <= 50000)  return { label: "Maestro del Queque", emoji: "🧑\u200d🍳🔥", color: "var(--amber)" };
-    if (q <= 1000000) return { label: "Genio del Queque",  emoji: "🧠🌟", color: "var(--cyan)" };
-    return { label: "Dios del Queque", emoji: "👑🌌", color: "var(--magenta)" };
+    if (q < 0)
+      return { label: "Queque Masticado", emoji: "💀", color: "var(--red)", min: -Infinity };
+
+    if (q <= 100)
+      return { label: "Queque de Vainilla", emoji: "🍰", color: "var(--muted)", min: 0 };
+
+    if (q <= 500)
+      return { label: "Aprendiz del Queque", emoji: "📚", color: "var(--cream)", min: 101 };
+
+    if (q <= 1500)
+      return { label: "Catador de Queque", emoji: "😋", color: "var(--green)", min: 501 };
+
+    if (q <= 5000)
+      return { label: "Experto en Queque", emoji: "🧭", color: "var(--green)", min: 1501 };
+
+    if (q <= 15000)
+      return { label: "Maestro del Queque", emoji: "🔥", color: "var(--amber)", min: 5001 };
+
+    if (q <= 50000)
+      return { label: "Chef Supremo", emoji: "👨‍🍳", color: "var(--amber)", min: 15001 };
+
+    if (q <= 100000)
+      return { label: "Magnate del Queque", emoji: "💰", color: "var(--caramel)", min: 50001 };
+
+    if (q <= 250000)
+      return { label: "Leyenda del Queque", emoji: "🏆", color: "var(--cyan)", min: 100001 };
+
+    if (q <= 500000)
+      return { label: "Rey del Queque", emoji: "👑", color: "var(--cyan)", min: 250001 };
+
+    if (q <= 1000000)
+      return { label: "Genio del Queque", emoji: "🌟", color: "var(--cyan)", min: 500001 };
+
+    if (q <= 5000000)
+      return { label: "Dios del Queque", emoji: "👼🏻", color: "var(--magenta)", min: 1000001 };
+
+    if (q <= 10000000)
+      return { label: "Titán del Queque", emoji: "⚡", color: "var(--magenta)", min: 5000001 };
+
+    if (q <= 50000000)
+      return { label: "Emperador del Queque", emoji: "🏰", color: "var(--frosting)", min: 10000001 };
+
+    if (q <= 100000000)
+      return { label: "Ser Supremo del Queque", emoji: "🧙‍♂️", color: "var(--frosting)", min: 50000001 };
+
+    return { label: "QUEQUE INFINITO", emoji: "♾️", color: "var(--magenta)", min: 100000001 };
   }
 
   function actualizarHUD() {
@@ -1556,18 +1596,45 @@
     logMsg(log, 'Eres rango <b style="color:' + r.color + '">' + r.emoji + " " + r.label + "</b>");
 
     const escalones = [
-      { min: -Infinity, max: -1,      label: "Queque Masticado 💔💀" },
-      { min: 0,         max: 500,     label: "Queque de Vainilla 🍰🚶" },
-      { min: 501,       max: 5000,    label: "Experto en Queque 🧭🏃" },
-      { min: 5001,      max: 50000,   label: "Maestro del Queque 🧑\u200d🍳🔥" },
-      { min: 50001,     max: 1000000, label: "Genio del Queque 🧠🌟" },
-      { min: 1000001,   max: Infinity,label: "Dios del Queque 👑🌌" },
+      { min: -Infinity,  max: -1,        label: "Queque Masticado", emoji: "💀" },
+      { min: 0,          max: 100,       label: "Queque de Vainilla", emoji: "🍰" },
+      { min: 101,        max: 500,       label: "Aprendiz del Queque", emoji: "📚" },
+      { min: 501,        max: 1500,      label: "Catador de Queque", emoji: "😋" },
+      { min: 1501,       max: 5000,      label: "Experto en Queque", emoji: "🧭" },
+      { min: 5001,       max: 15000,     label: "Maestro del Queque", emoji: "🔥" },
+      { min: 15001,      max: 50000,     label: "Chef Supremo", emoji: "👨‍🍳" },
+      { min: 50001,      max: 100000,    label: "Magnate del Queque", emoji: "💰" },
+      { min: 100001,     max: 250000,    label: "Leyenda del Queque", emoji: "🏆" },
+      { min: 250001,     max: 500000,    label: "Rey del Queque", emoji: "👑" },
+      { min: 500001,     max: 1000000,   label: "Genio del Queque", emoji: "🌟" },
+      { min: 1000001,    max: 5000000,   label: "Dios del Queque", emoji: "👼🏻" },
+      { min: 5000001,    max: 10000000,  label: "Titán del Queque", emoji: "⚡" },
+      { min: 10000001,   max: 50000000,  label: "Emperador del Queque", emoji: "🏰" },
+      { min: 50000001,   max: 100000000, label: "Ser Supremo del Queque", emoji: "🧙‍♂️" },
+      { min: 100000001,  max: Infinity,  label: "QUEQUE INFINITO", emoji: "♾️" },
     ];
+
     logMsg(log, "&nbsp;");
     logMsg(log, "Escala completa de rangos:", "info");
-    escalones.forEach((e) => {
+
+    escalones.forEach((e, i) => {
       const activo = queque >= e.min && queque <= e.max;
-      logMsg(log, (activo ? "→ " : "&nbsp;&nbsp;") + e.label, activo ? "accent" : "");
+
+      let texto = (activo ? "→ " : "&nbsp;&nbsp;") +
+                  e.emoji + " " + e.label;
+
+      if (e.min !== -Infinity) {
+        texto += " — desde " + e.min.toLocaleString() + " queques";
+      }
+
+      const siguiente = escalones[i + 1];
+      if (activo && siguiente && siguiente.min !== Infinity) {
+        const faltan = Math.max(0, siguiente.min - queque);
+        texto += " — faltan <b>" + faltan.toLocaleString() +
+                 "</b> para " + siguiente.label;
+      }
+
+      logMsg(log, texto, activo ? "accent" : "");
     });
   }
 
