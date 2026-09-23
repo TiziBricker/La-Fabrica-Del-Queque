@@ -510,6 +510,55 @@
   .reflejo-zona.espera { background: var(--bg-inset); color: var(--red); border-color: var(--red); }
   .reflejo-zona.ahora { background: var(--green); color: #14231b; border-color: var(--green); }
 
+  /* ---------- Ranking global ---------- */
+  .ranking-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .ranking-fila {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+  .ranking-fila.yo {
+    border-color: var(--caramel);
+    box-shadow: 0 0 0 1px var(--caramel) inset;
+  }
+  .ranking-pos {
+    width: 26px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .ranking-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--bg-inset);
+  }
+  .ranking-nombre {
+    flex: 1;
+    font-size: 13.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ranking-puntaje {
+    font-weight: 700;
+    color: var(--caramel);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
   footer {
     text-align: center;
     color: var(--muted);
@@ -537,7 +586,7 @@
 <div class="cabinet">
 
   <header>
-    <h1 class="titulo">🍰 La Fábrica<br>de Queque<span>arcade casero de queque</span></h1>
+    <h1 class="titulo">🏭 La Fábrica<br>de Queque<span>arcade casero de queque</span></h1>
     <div class="hud-grupo">
       <div class="hud">
         <div class="queque-label">QUEQUE ACTUAL</div>
@@ -592,6 +641,45 @@
     queque += n;
     guardarQueque();
     actualizarHUD(n);
+  }
+
+  // ---------------- Ranking global (capacidades db / user) ----------------
+  let dbNS = null;
+  let userNS = null;
+  let miUserId = null;
+  let dbListo = false; // true una vez que intentamos conectar (con éxito o no)
+  let dbWriteChain = Promise.resolve();
+  let syncTimer = null;
+
+  async function initGlobal() {
+    try {
+      if (window.claude && typeof window.claude.use === "function") {
+        dbNS = await window.claude.use("db");
+        userNS = await window.claude.use("user");
+      }
+    } catch (e) {
+      dbNS = null;
+      userNS = null;
+    }
+    if (userNS) {
+      try { miUserId = await userNS.id(); } catch (e) { miUserId = null; }
+    }
+    dbListo = true;
+    // por si el queque local ya tenía valor antes de conectar
+    programarSyncGlobal();
+  }
+
+  // Guarda el puntaje propio en el ranking compartido, con un pequeño
+  // debounce para no escribir en cada micro-cambio.
+  function programarSyncGlobal() {
+    if (!dbNS || !miUserId) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => {
+      const ref = dbNS.doc("leaderboard/" + miUserId);
+      dbWriteChain = dbWriteChain
+        .then(() => ref.set({ score: queque, ts: Date.now() }))
+        .catch(() => {});
+    }, 700);
   }
 
   function randInt(min, max) {
@@ -764,6 +852,8 @@
         monedaEl.classList.remove("subio", "bajo");
       }, 700);
     }
+
+    programarSyncGlobal();
   }
 
   // ---------------- Utilidades de UI ----------------
@@ -811,6 +901,7 @@
     { id: "minado",  emoji: "💣",    nombre: "Campo Minado",           detalle: "cada casilla segura suma más" },
     { id: "reflejos",emoji: "⚡",    nombre: "Reflejos",               detalle: "clic apenas diga ¡AHORA!" },
     { id: "rango",   emoji: "📊",    nombre: "Ver mi rango",           detalle: "estado actual" },
+    { id: "ranking", emoji: "🏆",    nombre: "Ranking Global",         detalle: "quién tiene más queques" },
   ];
 
   function mostrarMenu() {
@@ -850,6 +941,7 @@
       case "minado":     juegoMinado(); break;
       case "reflejos":   juegoReflejos(); break;
       case "rango":      juegoVerRango(); break;
+      case "ranking":    juegoRankingGlobal(); break;
     }
   }
 
@@ -1922,6 +2014,109 @@
   }
 
   // ================================================================
+  // RANKING GLOBAL
+  // ================================================================
+  function juegoRankingGlobal() {
+    setTitulo("🏆 Ranking Global");
+    const log = crearLog();
+    const lista = document.createElement("div");
+    lista.className = "ranking-lista";
+    const controles = crearControles();
+
+    panelBody.appendChild(log);
+    panelBody.appendChild(lista);
+    panelBody.appendChild(controles);
+
+    async function cargar() {
+      lista.innerHTML = "";
+      log.innerHTML = "";
+
+      if (!dbListo) {
+        logMsg(log, "Conectando con el ranking global…", "info");
+        await esperar(400);
+      }
+
+      if (!dbNS) {
+        logMsg(log,
+          "El ranking global no está disponible en esta vista (necesita que la página esté publicada con las capacidades de datos compartidos habilitadas).",
+          "fail"
+        );
+        return;
+      }
+
+      logMsg(log, "Top 10 de queques en todo el mundo:", "info");
+
+      let snap;
+      try {
+        snap = await dbNS.collection("leaderboard").orderBy("score", "desc").limit(10).get();
+      } catch (e) {
+        logMsg(log, "No se pudo cargar el ranking ahora mismo. Probá de nuevo en un rato.", "fail");
+        return;
+      }
+
+      if (snap.empty) {
+        logMsg(log, "Todavía nadie tiene puntaje registrado. ¡Sé el primero!", "warn");
+        return;
+      }
+
+      const ids = snap.docs.map((d) => d.id);
+      let perfiles = {};
+      if (userNS) {
+        try { perfiles = await userNS.profiles(ids); } catch (e) { perfiles = {}; }
+      }
+
+      const medallas = ["🥇", "🥈", "🥉"];
+
+      snap.docs.forEach((doc, i) => {
+        const data = doc.data() || {};
+        const puntaje = typeof data.score === "number" ? data.score : 0;
+        const perfil = perfiles[doc.id];
+        const soyYo = miUserId && doc.id === miUserId;
+        const nombre = (perfil && perfil.name) || (soyYo ? "Vos" : "Jugador anónimo");
+
+        const fila = document.createElement("div");
+        fila.className = "ranking-fila" + (soyYo ? " yo" : "");
+
+        const posicion = document.createElement("div");
+        posicion.className = "ranking-pos";
+        posicion.textContent = medallas[i] || String(i + 1);
+
+        const avatar = document.createElement("img");
+        avatar.className = "ranking-avatar";
+        avatar.alt = "";
+        avatar.src = (perfil && perfil.avatarUrl) || "";
+        avatar.style.background = (perfil && perfil.color) || "var(--bg-elevated)";
+
+        const nombreDiv = document.createElement("div");
+        nombreDiv.className = "ranking-nombre";
+        nombreDiv.textContent = nombre + (soyYo ? " (vos)" : "");
+
+        const puntajeDiv = document.createElement("div");
+        puntajeDiv.className = "ranking-puntaje";
+        puntajeDiv.textContent = puntaje.toLocaleString();
+
+        fila.appendChild(posicion);
+        fila.appendChild(avatar);
+        fila.appendChild(nombreDiv);
+        fila.appendChild(puntajeDiv);
+        lista.appendChild(fila);
+      });
+
+      if (miUserId && !ids.includes(miUserId)) {
+        logMsg(log, "Todavía no estás en el top 10. ¡Seguí juntando queque!", "warn");
+      }
+    }
+
+    const btnActualizar = document.createElement("button");
+    btnActualizar.className = "btn secundario";
+    btnActualizar.textContent = "🔄 Actualizar";
+    btnActualizar.addEventListener("click", cargar);
+    controles.appendChild(btnActualizar);
+
+    cargar();
+  }
+
+  // ================================================================
   // JUEGO 7: VER MI RANGO
   // ================================================================
   function juegoVerRango() {
@@ -1980,6 +2175,7 @@
   document.getElementById("monedaGrande").src = MONEDA_ICONO;
   actualizarHUD();
   mostrarMenu();
+  initGlobal();
 })();
 </script>
 </body>
