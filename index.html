@@ -133,6 +133,16 @@
     gap: 5px;
   }
 
+  .moneda-icono {
+    display: inline-block;
+    object-fit: contain;
+  }
+  .moneda-grande {
+    width: 30px;
+    height: 30px;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+  }
+
   .queque-num-fila {
     display: flex;
     align-items: center;
@@ -153,10 +163,12 @@
     transform: scale(1);
   }
 
-  .hud .queque-num.subio {
+  .hud .queque-num.subio,
+  .moneda-grande.subio {
     animation: quequePulso 0.55s ease, brilloVerde 0.7s ease;
   }
-  .hud .queque-num.bajo {
+  .hud .queque-num.bajo,
+  .moneda-grande.bajo {
     animation: quequePulso 0.55s ease, brilloRojo 0.7s ease;
   }
 
@@ -593,6 +605,10 @@
     align-items: center;
     gap: 5px;
   }
+  .ranking-puntaje .moneda-icono {
+    width: 17px;
+    height: 17px;
+  }
 
   footer {
     text-align: center;
@@ -626,6 +642,7 @@
       <div class="hud">
         <div class="queque-label">QUEQUE ACTUAL</div>
         <div class="queque-num-fila">
+          <img class="moneda-icono moneda-grande" id="monedaGrande" alt="queque" />
           <div class="queque-num" id="quequeNum">0</div>
         </div>
         <div class="rango-line" id="rangoLine"></div>
@@ -1037,6 +1054,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
 
   function actualizarHUD(delta) {
     const numEl = document.getElementById("quequeNum");
+    const monedaEl = document.getElementById("monedaGrande");
     numEl.textContent = formatNumero(queque);
     numEl.title = queque.toLocaleString();
     const r = getRango(queque);
@@ -1046,10 +1064,15 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
 
     if (typeof delta === "number" && delta !== 0) {
       const clase = delta > 0 ? "subio" : "bajo";
-      numEl.classList.remove("subio", "bajo");
-      void numEl.offsetWidth; // fuerza reflow para poder reiniciar la animación
-      numEl.classList.add(clase);
-      setTimeout(() => numEl.classList.remove("subio", "bajo"), 700);
+      [numEl, monedaEl].forEach((elemento) => {
+        elemento.classList.remove("subio", "bajo");
+        void elemento.offsetWidth; // fuerza reflow para poder reiniciar la animación
+        elemento.classList.add(clase);
+      });
+      setTimeout(() => {
+        numEl.classList.remove("subio", "bajo");
+        monedaEl.classList.remove("subio", "bajo");
+      }, 700);
     }
 
     programarSyncGlobal();
@@ -2390,7 +2413,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
 
         const puntajeDiv = document.createElement("div");
         puntajeDiv.className = "ranking-puntaje";
-        puntajeDiv.textContent = formatNumero(f.score);
+        puntajeDiv.innerHTML =
+          '<img class="moneda-icono" src="' + MONEDA_ICONO + '" alt="" /> ' +
+          formatNumero(f.score);
         puntajeDiv.title = f.score.toLocaleString();
 
         fila.appendChild(posicion);
@@ -2472,6 +2497,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
   }
 
   // ---------------- Arranque ----------------
+  document.getElementById("monedaGrande").src = MONEDA_ICONO;
   actualizarHUD();
   mostrarMenu();
   initGlobal();
