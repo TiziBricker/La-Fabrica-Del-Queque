@@ -511,6 +511,80 @@
   .reflejo-zona.espera { background: var(--bg-inset); color: var(--red); border-color: var(--red); }
   .reflejo-zona.ahora { background: var(--green); color: #14231b; border-color: var(--green); }
 
+  /* ---------- Plinko ---------- */
+  .plinko-tablero {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    height: 240px;
+    margin: 10px auto 14px;
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .plinko-clavos {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    bottom: 46px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  .plinko-fila-clavos {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+  }
+  .plinko-clavo {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--muted);
+    opacity: 0.6;
+  }
+  .plinko-ficha {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    margin-left: -11px;
+    font-size: 16px;
+    line-height: 22px;
+    text-align: center;
+    transition: left 0.2s ease, top 0.2s linear;
+    z-index: 2;
+  }
+  .plinko-slots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 40px;
+    display: flex;
+    gap: 2px;
+    padding: 0 2px;
+  }
+  .plinko-slot {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    border-radius: 3px 3px 0 0;
+    color: var(--bg);
+  }
+  .plinko-slot.gana { background: var(--green); }
+  .plinko-slot.pierde { background: var(--red); }
+  .plinko-slot.activo {
+    box-shadow: 0 0 0 2px var(--cream) inset, 0 0 12px -2px var(--cream);
+    transform: scale(1.05);
+  }
+
   /* ---------- Ranking global ---------- */
   .ranking-lista {
     display: flex;
@@ -1124,6 +1198,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     { id: "tragamonedas", emoji: "🎰", nombre: "Máquina de Queque",  detalle: "cuesta 100, tira de la palanca" },
     { id: "minado",  emoji: "💣",    nombre: "Campo Minado",           detalle: "cada casilla segura suma más" },
     { id: "reflejos",emoji: "⚡",    nombre: "Reflejos",               detalle: "clic apenas diga ¡AHORA!" },
+    { id: "mayormenor", emoji: "🎴", nombre: "Mayor o Menor",         detalle: "subí la apuesta o retirate" },
+    { id: "plinko",  emoji: "🎯",    nombre: "Plinko del Queque",      detalle: "soltá la ficha y mirá dónde cae" },
   ];
 
   function mostrarMenu() {
@@ -1162,6 +1238,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       case "tragamonedas": juegoTragamonedas(); break;
       case "minado":     juegoMinado(); break;
       case "reflejos":   juegoReflejos(); break;
+      case "mayormenor": juegoMayorMenor(); break;
+      case "plinko":     juegoPlinko(); break;
       case "rango":      juegoVerRango(); break;
       case "ranking":    juegoRankingGlobal(); break;
     }
@@ -2233,6 +2311,283 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     });
 
     setZona("Hacé clic para empezar");
+  }
+
+  // ================================================================
+  // JUEGO: MAYOR O MENOR
+  // ================================================================
+  function juegoMayorMenor() {
+    setTitulo("🎴 Mayor o Menor");
+    const log = crearLog();
+    const mesa = document.createElement("div");
+    const controles = crearControles();
+
+    panelBody.appendChild(log);
+    panelBody.appendChild(mesa);
+    panelBody.appendChild(controles);
+
+    logMsg(log, "Tienes " + queque + " de queque. As es la carta más baja (1), Rey la más alta (13).", "info");
+
+    function pintarMesa(actual, siguiente) {
+      mesa.innerHTML =
+        '<div class="mesa"><div class="mesa-titulo">CARTA ACTUAL</div><div class="mano">' +
+        cartaHTML(actual, false) +
+        (siguiente ? cartaHTML(siguiente, false) : "") +
+        "</div></div>";
+    }
+
+    function renderApuesta() {
+      controles.innerHTML = "";
+      mesa.innerHTML = "";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.placeholder = "apuesta";
+      const allIn = crearBotonAllIn(input);
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "Repartir";
+      btn.addEventListener("click", () => {
+        const v = parseInt(input.value, 10);
+        if (Number.isNaN(v) || v <= 0 || v > queque) {
+          logMsg(log, "Apuesta inválida.", "fail");
+          return;
+        }
+        empezarRonda(v);
+      });
+      controles.appendChild(input);
+      controles.appendChild(allIn);
+      controles.appendChild(btn);
+    }
+
+    function empezarRonda(apuesta) {
+      let actual = sacarCarta();
+      let multiplicador = 1;
+      let rondas = 0;
+
+      pintarMesa(actual, null);
+      logMsg(log, "Salió " + nombreCarta(actual.valor) + actual.palo + ". ¿La próxima es mayor o menor?", "info");
+
+      function probabilidad(esMayor) {
+        // cuenta cuántos de los 13 valores posibles cumplen la apuesta
+        // (empate no cuenta para ninguno de los dos lados)
+        let favorables = 0;
+        for (let v = 1; v <= 13; v++) {
+          if (esMayor && v > actual.valor) favorables++;
+          if (!esMayor && v < actual.valor) favorables++;
+        }
+        return favorables / 13;
+      }
+
+      function renderControlesJuego() {
+        controles.innerHTML = "";
+        const btnMayor = document.createElement("button");
+        btnMayor.className = "btn";
+        btnMayor.textContent = "▲ Mayor";
+        const btnMenor = document.createElement("button");
+        btnMenor.className = "btn secundario";
+        btnMenor.textContent = "▼ Menor";
+
+        btnMayor.addEventListener("click", () => jugar(true));
+        btnMenor.addEventListener("click", () => jugar(false));
+
+        controles.appendChild(btnMayor);
+        controles.appendChild(btnMenor);
+
+        if (rondas > 0) {
+          const premioActual = Math.floor(apuesta * multiplicador);
+          const btnRetirar = document.createElement("button");
+          btnRetirar.className = "btn secundario";
+          btnRetirar.textContent = "💰 Retirar (+" + premioActual + ")";
+          btnRetirar.addEventListener("click", () => retirar(premioActual));
+          controles.appendChild(btnRetirar);
+        }
+      }
+
+      function jugar(esMayor) {
+        const siguiente = sacarCarta();
+        pintarMesa(actual, siguiente);
+
+        if (siguiente.valor === actual.valor) {
+          logMsg(log, "Empate en " + nombreCarta(siguiente.valor) + ". No cuenta, tirá de nuevo.", "warn");
+          sonido.empate();
+          actual = siguiente;
+          renderControlesJuego();
+          return;
+        }
+
+        const acerto = esMayor ? siguiente.valor > actual.valor : siguiente.valor < actual.valor;
+
+        if (!acerto) {
+          logMsg(log, nombreCarta(siguiente.valor) + siguiente.palo + ". Fallaste. Pierdes <b>-" + apuesta + "</b>", "fail");
+          sonido.perder();
+          sumarQueque(-apuesta);
+          finDeRonda();
+          return;
+        }
+
+        const prob = probabilidad(esMayor);
+        multiplicador = multiplicador * (prob > 0 ? (0.95 / prob) : 1);
+        rondas++;
+        actual = siguiente;
+
+        logMsg(log, nombreCarta(siguiente.valor) + siguiente.palo + ". Acertaste! Multiplicador: x" + multiplicador.toFixed(2), "ok");
+        sonido.acierto();
+        renderControlesJuego();
+      }
+
+      function retirar(premio) {
+        logMsg(log, "Te retirás con <b>+" + premio + "</b> de queque.", "ok");
+        sonido.ganar();
+        sumarQueque(premio);
+        finDeRonda();
+      }
+
+      function finDeRonda() {
+        controles.innerHTML = "";
+        const btn = document.createElement("button");
+        btn.className = "btn secundario";
+        btn.textContent = "Jugar otra vez";
+        btn.addEventListener("click", () => {
+          log.innerHTML = "";
+          logMsg(log, "Tienes " + queque + " de queque. As es la carta más baja (1), Rey la más alta (13).", "info");
+          renderApuesta();
+        });
+        controles.appendChild(btn);
+      }
+
+      renderControlesJuego();
+    }
+
+    renderApuesta();
+  }
+
+  // ================================================================
+  // JUEGO: PLINKO DEL QUEQUE
+  // ================================================================
+  const PLINKO_FILAS = 8;
+  const PLINKO_MULTIPLICADORES = [8, 3, 1.5, 0.5, 0.3, 0.5, 1.5, 3, 8];
+
+  function construirTableroPlinko(contenedor) {
+    contenedor.innerHTML = "";
+    contenedor.className = "plinko-tablero";
+
+    const clavos = document.createElement("div");
+    clavos.className = "plinko-clavos";
+    for (let f = 0; f < PLINKO_FILAS; f++) {
+      const fila = document.createElement("div");
+      fila.className = "plinko-fila-clavos";
+      for (let c = 0; c <= f; c++) {
+        const clavo = document.createElement("div");
+        clavo.className = "plinko-clavo";
+        fila.appendChild(clavo);
+      }
+      clavos.appendChild(fila);
+    }
+
+    const ficha = document.createElement("div");
+    ficha.className = "plinko-ficha";
+    ficha.textContent = "🍰";
+
+    const slots = document.createElement("div");
+    slots.className = "plinko-slots";
+    PLINKO_MULTIPLICADORES.forEach((m) => {
+      const slot = document.createElement("div");
+      slot.className = "plinko-slot" + (m >= 1 ? " gana" : " pierde");
+      slot.textContent = "x" + m;
+      slots.appendChild(slot);
+    });
+
+    contenedor.appendChild(clavos);
+    contenedor.appendChild(ficha);
+    contenedor.appendChild(slots);
+    return { clavos, ficha, slots };
+  }
+
+  function juegoPlinko() {
+    setTitulo("🎯 Plinko del Queque");
+    const log = crearLog();
+    const tablero = document.createElement("div");
+    const controles = crearControles();
+
+    panelBody.appendChild(log);
+    panelBody.appendChild(tablero);
+    panelBody.appendChild(controles);
+
+    logMsg(log, "Tienes " + queque + " de queque. Soltá la ficha y mirá dónde cae.", "info");
+    logMsg(log, "Multiplicadores: " + PLINKO_MULTIPLICADORES.map((m) => "x" + m).join("  "));
+
+    const { ficha, slots } = construirTableroPlinko(tablero);
+
+    function renderApuesta() {
+      controles.innerHTML = "";
+      ficha.style.left = "50%";
+      ficha.style.top = "0px";
+      Array.from(slots.children).forEach((s) => s.classList.remove("activo"));
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.placeholder = "apuesta";
+      const allIn = crearBotonAllIn(input);
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "🎯 Soltar la ficha";
+      btn.addEventListener("click", () => {
+        const v = parseInt(input.value, 10);
+        if (Number.isNaN(v) || v <= 0 || v > queque) {
+          logMsg(log, "Apuesta inválida.", "fail");
+          return;
+        }
+        soltar(v);
+      });
+      controles.appendChild(input);
+      controles.appendChild(allIn);
+      controles.appendChild(btn);
+    }
+
+    async function soltar(apuesta) {
+      controles.innerHTML = "";
+      logMsg(log, "Cae la ficha…", "info");
+
+      // camino aleatorio: en cada fila, 50/50 izquierda o derecha
+      let desplazamiento = 0; // rango final: -PLINKO_FILAS .. +PLINKO_FILAS (de a 2)
+      const anchoTablero = tablero.clientWidth || 300;
+      const pasoX = (anchoTablero / 2) / PLINKO_FILAS;
+
+      for (let f = 0; f < PLINKO_FILAS; f++) {
+        desplazamiento += Math.random() < 0.5 ? -1 : 1;
+        const porcentaje = 50 + (desplazamiento * (pasoX / anchoTablero) * 100);
+        ficha.style.left = porcentaje + "%";
+        ficha.style.top = ((f + 1) / PLINKO_FILAS) * 78 + "%";
+        await esperar(220);
+      }
+
+      // desplazamiento va de -8 a +8 de a pasos de 2 -> índice de slot 0..8
+      const indiceSlot = (desplazamiento + PLINKO_FILAS) / 2;
+      const multiplicador = PLINKO_MULTIPLICADORES[indiceSlot];
+      const slotEl = slots.children[indiceSlot];
+      if (slotEl) slotEl.classList.add("activo");
+
+      const premio = Math.round(apuesta * multiplicador);
+      const neto = premio - apuesta;
+
+      logMsg(log, "Cayó en <b>x" + multiplicador + "</b>. " +
+        (neto >= 0 ? "Ganaste <b>+" + neto + "</b>" : "Perdiste <b>" + neto + "</b>") + " de queque.",
+        neto >= 0 ? "ok" : "fail");
+
+      if (multiplicador >= 8) sonido.jackpot();
+      else if (neto >= 0) sonido.ganar();
+      else sonido.perder();
+
+      sumarQueque(neto);
+
+      const btn = document.createElement("button");
+      btn.className = "btn secundario";
+      btn.textContent = "Soltar otra ficha";
+      btn.addEventListener("click", renderApuesta);
+      controles.appendChild(btn);
+    }
+
+    renderApuesta();
   }
 
   // ================================================================
