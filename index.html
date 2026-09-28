@@ -511,6 +511,244 @@
   .reflejo-zona.espera { background: var(--bg-inset); color: var(--red); border-color: var(--red); }
   .reflejo-zona.ahora { background: var(--green); color: #14231b; border-color: var(--green); }
 
+  /* ---------- Barras de progreso (desafío / logros / banner) ---------- */
+  .barra {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    display: block;
+  }
+  .barra.chica { height: 5px; margin-top: 6px; }
+  .barra-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--caramel), var(--frosting));
+    border-radius: 6px;
+    transition: width 0.4s ease;
+  }
+
+  /* ---------- Banner diario (arriba del menú) ---------- */
+  .banner-diario {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .banner-btn {
+    flex: 2 1 220px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(155deg, var(--bg-elevated), var(--bg-panel));
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--cream);
+    font-family: var(--font-mono);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .banner-btn.corto { flex: 1 1 130px; }
+  .banner-btn:hover { border-color: var(--caramel); }
+  .banner-btn.bono {
+    border-color: var(--caramel);
+    animation: bonoPulso 1.8s ease-in-out infinite;
+  }
+  @keyframes bonoPulso {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(224, 164, 88, 0); }
+    50%      { box-shadow: 0 0 14px 1px rgba(224, 164, 88, 0.45); }
+  }
+  .banner-emoji { font-size: 24px; flex-shrink: 0; }
+  .banner-cuerpo { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .banner-titulo {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .banner-valor {
+    font-size: 12.5px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---------- Racha diaria ---------- */
+  .racha-tira {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin: 10px 0 12px;
+  }
+  .racha-dia {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 6px 2px;
+    text-align: center;
+  }
+  .racha-dia-n { font-size: 9.5px; color: var(--muted); }
+  .racha-dia-v { font-size: 12px; font-weight: 700; margin-top: 2px; color: var(--muted); }
+  .racha-dia.hecho { border-color: var(--green); }
+  .racha-dia.hecho .racha-dia-v { color: var(--green); }
+  .racha-dia.actual {
+    border-color: var(--caramel);
+    background: #2f2216;
+    box-shadow: 0 0 10px -3px var(--caramel);
+  }
+  .racha-dia.actual .racha-dia-v { color: var(--caramel); }
+  .racha-titulo { font-size: 17px; font-weight: 700; }
+  .racha-mejor { font-size: 11px; font-weight: 400; color: var(--muted); }
+
+  /* ---------- Tarjetas de desafío ---------- */
+  .desafio-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .desafio-card.completo { border-color: var(--green); }
+  .desafio-etiqueta {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .desafio-texto {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .desafio-fila {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    margin-top: 8px;
+  }
+  .desafio-fila b { color: var(--caramel); }
+  .desafio-reloj { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .desafio-hecho { font-size: 12.5px; color: var(--green); margin-top: 8px; font-weight: 600; }
+
+  /* ---------- Modal del bono diario ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 6, 4, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 60;
+    animation: fundido 0.2s ease;
+  }
+  @keyframes fundido { from { opacity: 0; } to { opacity: 1; } }
+  .modal-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--bg-panel);
+    border: 1px solid var(--caramel);
+    border-radius: 10px;
+    padding: 22px 18px 16px;
+    text-align: center;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 30px -8px var(--caramel);
+  }
+  .modal-emoji { font-size: 40px; line-height: 1; }
+  .modal-card h3 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin: 8px 0 4px;
+  }
+  .modal-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 4px; }
+  .modal-btn { width: 100%; padding: 12px; font-size: 14.5px; }
+  .modal-cerrar {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    margin-top: 10px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .modal-cerrar:hover { color: var(--cream); }
+
+  /* ---------- Logros y estadísticas ---------- */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  @media (max-width: 460px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .stat-num { font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--caramel); }
+  .stat-lbl { font-size: 10px; color: var(--muted); letter-spacing: 0.05em; margin-top: 2px; }
+  .logros-resumen { font-size: 12.5px; margin-bottom: 6px; }
+  .logros-lista { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .logro-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 9px 12px;
+  }
+  .logro-fila.on { border-color: var(--caramel); }
+  .logro-fila.off { opacity: 0.6; }
+  .logro-emoji { font-size: 24px; width: 30px; text-align: center; flex-shrink: 0; }
+  .logro-info { flex: 1; min-width: 0; }
+  .logro-nombre { font-size: 13.5px; font-weight: 600; }
+  .logro-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .logro-der { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+  .logro-prog { font-size: 10.5px; color: var(--muted); }
+  .logro-premio { font-size: 12px; font-weight: 700; color: var(--green); }
+  .logro-premio.pend { color: var(--caramel); }
+
+  /* ---------- Toasts ---------- */
+  .toasts {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    width: min(92vw, 380px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--caramel);
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+    animation: toastEntra 0.3s ease;
+  }
+  .toast.saliendo { animation: toastSale 0.35s ease forwards; }
+  .toast-emoji { font-size: 26px; }
+  .toast-titulo { font-size: 12.5px; font-weight: 700; color: var(--caramel); }
+  .toast-detalle { font-size: 12px; color: var(--cream); margin-top: 1px; }
+  @keyframes toastEntra { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toastSale  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } }
+
   /* ---------- Plinko ---------- */
   .plinko-tablero {
     position: relative;
@@ -742,6 +980,8 @@
 
 </div>
 
+<div class="toasts" id="toasts"></div>
+
 <script>
 (function () {
   "use strict";
@@ -772,10 +1012,18 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     try { localStorage.setItem("queque-actual", String(queque)); } catch (e) {}
   }
 
-  function sumarQueque(n) {
+  // opts.sinEvento: premio interno (bono, recompensa de logro/desafío) -> no cuenta como partida.
+  // opts.resultado === "empate": cuenta como partida jugada, pero ni gana ni pierde.
+  function sumarQueque(n, opts) {
     queque += n;
     guardarQueque();
     actualizarHUD(n);
+    opts = opts || {};
+    if (opts.sinEvento) {
+      revisarLogros(); // por si llegar a cierto queque desbloquea algo
+    } else {
+      registrarResultado(juegoActual, opts.resultado === "empate" ? 0 : n);
+    }
   }
 
   // ---------------- Ranking global (Claude db/user, o Supabase como alternativa) ----------------
@@ -990,6 +1238,10 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       tono(1200, 0.05, "square", 0.06, 0);
       tono(900, 0.05, "square", 0.05, 0.05);
     },
+    // logro desbloqueado: cuatro notas agudas y brillantes, tipo campanita
+    logro() {
+      [784, 988, 1175, 1568].forEach((f, i) => tono(f, 0.22, "triangle", 0.1, i * 0.09));
+    },
   };
 
   function alternarSonido() {
@@ -1074,6 +1326,446 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     if (!musicaGainNode || !audioCtx) return;
     const objetivo = sonidoActivo ? 0.05 : 0;
     musicaGainNode.gain.linearRampToValueAtTime(objetivo, audioCtx.currentTime + 0.5);
+  }
+
+  // ================================================================
+  // PROGRESIÓN: racha diaria, logros y desafío del día
+  // Todo se guarda en localStorage (por navegador/dispositivo).
+  // ================================================================
+  const IDS_JUEGOS = [
+    "numero", "rpt", "ruleta", "blackjack", "memoria", "triqui",
+    "tragamonedas", "minado", "reflejos", "mayormenor", "plinko",
+  ];
+  let juegoActual = null; // id del juego que está abierto (null = menú u otra pantalla)
+  let enMenu = true;
+
+  function cargarJSON(clave, porDefecto) {
+    try {
+      const txt = localStorage.getItem(clave);
+      if (!txt) return porDefecto;
+      const obj = JSON.parse(txt);
+      return obj && typeof obj === "object" ? obj : porDefecto;
+    } catch (e) {
+      return porDefecto;
+    }
+  }
+  function guardarJSON(clave, valor) {
+    try { localStorage.setItem(clave, JSON.stringify(valor)); } catch (e) {}
+  }
+
+  // ---- fechas (siempre en hora local del jugador) ----
+  function pad2(n) { return n < 10 ? "0" + n : String(n); }
+  function fechaStr(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function hoyStr() { return fechaStr(new Date()); }
+  function ayerStr() { const d = new Date(); d.setDate(d.getDate() - 1); return fechaStr(d); }
+  function numeroDeDia(diaStr) {
+    const p = diaStr.split("-").map(Number);
+    return Math.floor(Date.UTC(p[0], p[1] - 1, p[2]) / 86400000);
+  }
+  function textoRestanteDia() {
+    const ahora = new Date();
+    const fin = new Date(ahora);
+    fin.setHours(24, 0, 0, 0);
+    const min = Math.max(0, Math.floor((fin - ahora) / 60000));
+    return Math.floor(min / 60) + " h " + (min % 60) + " min";
+  }
+
+  // ---- notificaciones flotantes ----
+  function mostrarToast(emoji, titulo, detalle) {
+    const cont = document.getElementById("toasts");
+    if (!cont) return;
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML =
+      '<div class="toast-emoji"></div><div><div class="toast-titulo"></div><div class="toast-detalle"></div></div>';
+    t.querySelector(".toast-emoji").textContent = emoji;
+    t.querySelector(".toast-titulo").textContent = titulo;
+    t.querySelector(".toast-detalle").textContent = detalle;
+    cont.appendChild(t);
+    setTimeout(() => {
+      t.classList.add("saliendo");
+      setTimeout(() => t.remove(), 350);
+    }, 4200);
+  }
+
+  // ---- estadísticas personales ----
+  function statsBase() {
+    return {
+      total: 0, victorias: 0, derrotas: 0, empates: 0,
+      rachaVictorias: 0, mejorRachaVictorias: 0,
+      maxGanancia: 0, desafiosCompletados: 0, porJuego: {},
+    };
+  }
+  let stats = Object.assign(statsBase(), cargarJSON("queque-stats", {}));
+  if (!stats.porJuego || typeof stats.porJuego !== "object") stats.porJuego = {};
+
+  function juegosProbados() {
+    return IDS_JUEGOS.filter((id) => stats.porJuego[id] && stats.porJuego[id].jugadas > 0).length;
+  }
+
+  // Punto de entrada único: se llama cada vez que termina una partida.
+  // neto > 0 gana, neto < 0 pierde, neto === 0 empate.
+  function registrarResultado(juegoId, neto) {
+    if (IDS_JUEGOS.indexOf(juegoId) === -1) return;
+    stats.total++;
+    const pj = stats.porJuego[juegoId] || (stats.porJuego[juegoId] = { jugadas: 0, ganadas: 0 });
+    pj.jugadas++;
+    if (neto > 0) {
+      stats.victorias++;
+      pj.ganadas++;
+      stats.rachaVictorias++;
+      if (stats.rachaVictorias > stats.mejorRachaVictorias) stats.mejorRachaVictorias = stats.rachaVictorias;
+      if (neto > stats.maxGanancia) stats.maxGanancia = neto;
+    } else if (neto < 0) {
+      stats.derrotas++;
+      stats.rachaVictorias = 0;
+    } else {
+      stats.empates++;
+    }
+    guardarJSON("queque-stats", stats);
+    actualizarDesafio(juegoId, neto);
+    revisarLogros();
+  }
+
+  // ---- racha diaria ----
+  const BONO_DIARIO = [100, 150, 200, 300, 400, 500, 1000]; // ciclo de 7 días
+  let racha = Object.assign({ ultimoDia: null, racha: 0, mejor: 0 }, cargarJSON("queque-racha", {}));
+  let bonoDiaMostrado = null;
+
+  // Devuelve el estado de la racha y si hay un bono pendiente de reclamar hoy.
+  function calcularRacha() {
+    const hoy = hoyStr();
+    const ayer = ayerStr();
+    if (racha.ultimoDia === hoy) {
+      return { hoy, pendiente: false, mostrar: racha.racha, pos: ((racha.racha - 1) % 7) + 1 };
+    }
+    const sigueViva = racha.ultimoDia === ayer;
+    const nueva = sigueViva ? racha.racha + 1 : 1;
+    const pos = ((nueva - 1) % 7) + 1;
+    return {
+      hoy,
+      pendiente: true,
+      nueva,
+      pos,
+      bonus: BONO_DIARIO[pos - 1],
+      cortada: !sigueViva && !!racha.ultimoDia,
+      mostrar: sigueViva ? racha.racha : 0,
+    };
+  }
+
+  function htmlTiraRacha(pos, reclamado) {
+    let h = "";
+    for (let i = 1; i <= 7; i++) {
+      let estado = "futuro";
+      if (i < pos || (i === pos && reclamado)) estado = "hecho";
+      else if (i === pos) estado = "actual";
+      h += '<div class="racha-dia ' + estado + '">' +
+        '<div class="racha-dia-n">Día ' + i + "</div>" +
+        '<div class="racha-dia-v">' + (estado === "hecho" ? "✓" : "+" + BONO_DIARIO[i - 1]) + "</div></div>";
+    }
+    return h;
+  }
+
+  function cerrarModalBono() {
+    const m = document.getElementById("modalBono");
+    if (m) m.remove();
+  }
+
+  function abrirModalBono() {
+    const est = calcularRacha();
+    if (!est.pendiente) return;
+    cerrarModalBono();
+
+    let subtitulo;
+    if (est.cortada) subtitulo = "Se cortó tu racha 😢 Arrancás de nuevo, ¡no aflojes!";
+    else if (est.nueva === 1) subtitulo = "¡Empezá tu racha! Volvé mañana por más.";
+    else subtitulo = "🔥 Racha de " + est.nueva + " días seguidos";
+
+    const ov = document.createElement("div");
+    ov.className = "modal-overlay";
+    ov.id = "modalBono";
+    ov.innerHTML =
+      '<div class="modal-card">' +
+        '<div class="modal-emoji">🎁</div>' +
+        "<h3>Bono diario</h3>" +
+        '<p class="modal-sub"></p>' +
+        '<div class="racha-tira">' + htmlTiraRacha(est.pos, false) + "</div>" +
+        '<button class="btn modal-btn" id="btnReclamar"></button>' +
+        '<button class="modal-cerrar" id="btnBonoDespues">Después</button>' +
+      "</div>";
+    document.body.appendChild(ov);
+    ov.querySelector(".modal-sub").textContent = subtitulo;
+    ov.querySelector("#btnReclamar").textContent = "🎁 Reclamar +" + est.bonus;
+
+    ov.querySelector("#btnReclamar").addEventListener("click", () => {
+      racha = { ultimoDia: est.hoy, racha: est.nueva, mejor: Math.max(racha.mejor || 0, est.nueva) };
+      guardarJSON("queque-racha", racha);
+      sonido.jackpot();
+      mostrarToast("🎁", "Bono diario reclamado",
+        "+" + est.bonus + " · racha de " + est.nueva + (est.nueva === 1 ? " día" : " días"));
+      cerrarModalBono();
+      sumarQueque(est.bonus, { sinEvento: true });
+      if (enMenu) mostrarMenu();
+    });
+    ov.querySelector("#btnBonoDespues").addEventListener("click", cerrarModalBono);
+  }
+
+  // Se muestra una sola vez por día, al entrar al menú.
+  function verificarBonoDiario() {
+    const hoy = hoyStr();
+    if (bonoDiaMostrado === hoy) return;
+    if (calcularRacha().pendiente) {
+      bonoDiaMostrado = hoy;
+      abrirModalBono();
+    }
+  }
+
+  // ---- desafío del día (el mismo para todos, cambia a medianoche) ----
+  const DESAFIOS = [
+    { id: "ganar3",   tipo: "ganar_total",    meta: 3,    texto: "Ganá 3 partidas",                           premio: 400 },
+    { id: "ganar5",   tipo: "ganar_total",    meta: 5,    texto: "Ganá 5 partidas",                           premio: 800 },
+    { id: "jugar8",   tipo: "jugar_total",    meta: 8,    texto: "Jugá 8 partidas",                           premio: 500 },
+    { id: "variados", tipo: "jugar_variados", meta: 4,    texto: "Jugá 4 juegos distintos",                   premio: 600 },
+    { id: "ruleta2",  tipo: "ganar_juego",    juego: "ruleta",     meta: 2, texto: "Ganá 2 veces en la Ruleta",               premio: 700 },
+    { id: "bj2",      tipo: "ganar_juego",    juego: "blackjack",  meta: 2, texto: "Ganá 2 manos de Blackjack",               premio: 700 },
+    { id: "refl2",    tipo: "ganar_juego",    juego: "reflejos",   meta: 2, texto: "Ganá 2 veces en Reflejos",                premio: 600 },
+    { id: "mina1",    tipo: "ganar_juego",    juego: "minado",     meta: 1, texto: "Ganá una partida de Campo Minado",        premio: 600 },
+    { id: "plinko3",  tipo: "jugar_juego",    juego: "plinko",     meta: 3, texto: "Soltá 3 fichas en Plinko",                premio: 400 },
+    { id: "tragam3",  tipo: "jugar_juego",    juego: "tragamonedas", meta: 3, texto: "Tirá 3 veces la Máquina de Queque",     premio: 400 },
+    { id: "triqui1",  tipo: "ganar_juego",    juego: "triqui",     meta: 1, texto: "Ganale una partida de Tres en raya a la máquina", premio: 600 },
+    { id: "gran1000", tipo: "ganancia_unica", meta: 1000, texto: "Ganá 1.000 queques de una sola vez",        premio: 800 },
+    { id: "racha3d",  tipo: "racha_victorias", meta: 3,   texto: "Ganá 3 partidas seguidas",                  premio: 900 },
+    { id: "mayor2",   tipo: "ganar_juego",    juego: "mayormenor", meta: 2, texto: "Ganá 2 veces en Mayor o Menor",           premio: 600 },
+    { id: "numero1",  tipo: "ganar_juego",    juego: "numero",     meta: 1, texto: "Adiviná el número secreto",               premio: 500 },
+  ];
+  let desafio = cargarJSON("queque-desafio", null);
+
+  function defDesafio(id) {
+    return DESAFIOS.find((d) => d.id === id) || DESAFIOS[0];
+  }
+
+  // Elige el desafío de hoy según el número de día (paso 7, coprimo con 15:
+  // recorre todos sin repetir y es igual para todos los jugadores).
+  function asegurarDesafioDeHoy() {
+    const hoy = hoyStr();
+    if (!desafio || desafio.dia !== hoy) {
+      const idx = (numeroDeDia(hoy) * 7) % DESAFIOS.length;
+      desafio = { dia: hoy, id: DESAFIOS[idx].id, progreso: 0, completado: false, juegosHoy: [], rachaHoy: 0 };
+      guardarJSON("queque-desafio", desafio);
+    }
+    return desafio;
+  }
+
+  function actualizarDesafio(juegoId, neto) {
+    const d = asegurarDesafioDeHoy();
+    if (d.completado) return;
+    const def = defDesafio(d.id);
+    const gano = neto > 0;
+
+    if (d.juegosHoy.indexOf(juegoId) === -1) d.juegosHoy.push(juegoId);
+    if (gano) d.rachaHoy++;
+    else if (neto < 0) d.rachaHoy = 0;
+
+    switch (def.tipo) {
+      case "ganar_total":     if (gano) d.progreso++; break;
+      case "jugar_total":     d.progreso++; break;
+      case "jugar_variados":  d.progreso = d.juegosHoy.length; break;
+      case "ganar_juego":     if (gano && juegoId === def.juego) d.progreso++; break;
+      case "jugar_juego":     if (juegoId === def.juego) d.progreso++; break;
+      case "ganancia_unica":  if (gano) d.progreso = Math.max(d.progreso, neto); break;
+      case "racha_victorias": d.progreso = Math.max(d.progreso, d.rachaHoy); break;
+    }
+
+    if (d.progreso >= def.meta) {
+      d.completado = true;
+      stats.desafiosCompletados++;
+      guardarJSON("queque-stats", stats);
+      guardarJSON("queque-desafio", d);
+      mostrarToast("🎯", "¡Desafío completado!", def.texto + " · +" + def.premio);
+      sonido.jackpot();
+      sumarQueque(def.premio, { sinEvento: true });
+    } else {
+      guardarJSON("queque-desafio", d);
+    }
+  }
+
+  // ---- logros ----
+  const LOGROS = [
+    { id: "primera",    emoji: "🎮", nombre: "Primera partida",  desc: "Jugá tu primera partida",               premio: 50,
+      ok: () => stats.total >= 1 },
+    { id: "victoria",   emoji: "🏆", nombre: "Primera victoria", desc: "Ganá una partida",                      premio: 100,
+      ok: () => stats.victorias >= 1 },
+    { id: "racha3",     emoji: "🔥", nombre: "En llamas",        desc: "Ganá 3 partidas seguidas",              premio: 200,
+      ok: () => stats.mejorRachaVictorias >= 3, prog: () => [stats.mejorRachaVictorias, 3] },
+    { id: "racha5",     emoji: "⚡", nombre: "Imparable",        desc: "Ganá 5 partidas seguidas",              premio: 500,
+      ok: () => stats.mejorRachaVictorias >= 5, prog: () => [stats.mejorRachaVictorias, 5] },
+    { id: "premio1k",   emoji: "💰", nombre: "Buen premio",      desc: "Ganá 1.000 queques de una sola vez",    premio: 300,
+      ok: () => stats.maxGanancia >= 1000, prog: () => [stats.maxGanancia, 1000] },
+    { id: "premio5k",   emoji: "🎰", nombre: "Jackpot",          desc: "Ganá 5.000 queques de una sola vez",    premio: 1000,
+      ok: () => stats.maxGanancia >= 5000, prog: () => [stats.maxGanancia, 5000] },
+    { id: "curioso",    emoji: "🎲", nombre: "Curioso",          desc: "Probá 5 juegos distintos",              premio: 200,
+      ok: () => juegosProbados() >= 5, prog: () => [juegosProbados(), 5] },
+    { id: "todoterreno", emoji: "🌟", nombre: "Todoterreno",     desc: "Probá los " + IDS_JUEGOS.length + " juegos", premio: 1000,
+      ok: () => juegosProbados() >= IDS_JUEGOS.length, prog: () => [juegosProbados(), IDS_JUEGOS.length] },
+    { id: "veterano",   emoji: "💯", nombre: "Veterano",         desc: "Jugá 50 partidas",                      premio: 500,
+      ok: () => stats.total >= 50, prog: () => [stats.total, 50] },
+    { id: "constante",  emoji: "📅", nombre: "Constante",        desc: "Llegá a 3 días de racha diaria",        premio: 300,
+      ok: () => racha.mejor >= 3, prog: () => [racha.mejor, 3] },
+    { id: "fiel",       emoji: "📆", nombre: "Fiel",             desc: "Llegá a 7 días de racha diaria",        premio: 1000,
+      ok: () => racha.mejor >= 7, prog: () => [racha.mejor, 7] },
+    { id: "desafiante", emoji: "🎯", nombre: "Desafiante",       desc: "Completá un desafío del día",           premio: 300,
+      ok: () => stats.desafiosCompletados >= 1 },
+    { id: "cumplidor",  emoji: "🏅", nombre: "Cumplidor",        desc: "Completá 5 desafíos del día",           premio: 1000,
+      ok: () => stats.desafiosCompletados >= 5, prog: () => [stats.desafiosCompletados, 5] },
+    { id: "experto",    emoji: "🧭", nombre: "Experto",          desc: "Llegá a 5.000 queques",                 premio: 500,
+      ok: () => queque >= 5000, prog: () => [queque, 5000] },
+    { id: "millonario", emoji: "💎", nombre: "Millonario",       desc: "Llegá a 1.000.000 de queques",          premio: 5000,
+      ok: () => queque >= 1000000, prog: () => [queque, 1000000] },
+  ];
+  let logros = cargarJSON("queque-logros", {});
+
+  let revisandoLogros = false;
+  function revisarLogros() {
+    if (revisandoLogros) return;
+    revisandoLogros = true;
+    try {
+      // repite mientras haya logros nuevos: el premio de uno puede destrabar otro
+      let hayNuevos = true;
+      let vueltas = 0;
+      while (hayNuevos && vueltas++ < 10) {
+        hayNuevos = false;
+        for (let i = 0; i < LOGROS.length; i++) {
+          const l = LOGROS[i];
+          if (!logros[l.id] && l.ok()) {
+            logros[l.id] = Date.now();
+            guardarJSON("queque-logros", logros);
+            hayNuevos = true;
+            sumarQueque(l.premio, { sinEvento: true });
+            mostrarToast(l.emoji, "¡Logro desbloqueado!", l.nombre + " · +" + l.premio);
+            sonido.logro();
+          }
+        }
+      }
+    } finally {
+      revisandoLogros = false;
+    }
+  }
+
+  // ---- pantallas ----
+  function pantallaDesafio() {
+    setTitulo("🎯 Desafío del día");
+    const d = asegurarDesafioDeHoy();
+    const def = defDesafio(d.id);
+    const est = calcularRacha();
+
+    const prog = Math.min(d.progreso, def.meta);
+    const pct = Math.round((prog / def.meta) * 100);
+    const progTxt = def.tipo === "ganancia_unica"
+      ? formatNumero(prog) + " / " + formatNumero(def.meta)
+      : prog + " / " + def.meta;
+
+    const mostrarRacha = est.pendiente ? est.mostrar : racha.racha;
+
+    const wrap = document.createElement("div");
+    wrap.innerHTML =
+      '<div class="desafio-card' + (d.completado ? " completo" : "") + '">' +
+        '<div class="desafio-etiqueta">MISIÓN DE HOY</div>' +
+        '<div class="desafio-texto">' + def.texto + "</div>" +
+        '<div class="barra"><div class="barra-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="desafio-fila"><span>' + progTxt + "</span><span>Premio: <b>+" + def.premio + "</b></span></div>" +
+        (d.completado
+          ? '<div class="desafio-hecho">✅ ¡Completado! Volvé mañana por otro.</div>'
+          : '<div class="desafio-reloj">Nuevo desafío en ' + textoRestanteDia() + "</div>") +
+      "</div>" +
+      '<div class="desafio-card">' +
+        '<div class="desafio-etiqueta">RACHA DIARIA</div>' +
+        '<div class="racha-titulo">🔥 ' + mostrarRacha + (mostrarRacha === 1 ? " día" : " días") +
+          ' <span class="racha-mejor">· mejor: ' + Math.max(racha.mejor || 0, mostrarRacha) + "</span></div>" +
+        '<div class="racha-tira">' + htmlTiraRacha(est.pos, !est.pendiente) + "</div>" +
+        (est.pendiente
+          ? '<button class="btn" id="btnBonoAhora">🎁 Reclamar +' + est.bonus + "</button>"
+          : '<div class="desafio-reloj">Bono de hoy reclamado ✓ · el próximo en ' + textoRestanteDia() + "</div>") +
+      "</div>";
+    panelBody.appendChild(wrap);
+
+    const btn = wrap.querySelector("#btnBonoAhora");
+    if (btn) btn.addEventListener("click", abrirModalBono);
+  }
+
+  function pantallaLogros() {
+    setTitulo("🏅 Logros");
+    const total = LOGROS.length;
+    const hechos = LOGROS.filter((l) => logros[l.id]).length;
+    const pctVictorias = stats.total ? Math.round((stats.victorias / stats.total) * 100) : 0;
+
+    let filas = "";
+    LOGROS.forEach((l) => {
+      const ok = !!logros[l.id];
+      let progHtml = "";
+      if (!ok && l.prog) {
+        const p = l.prog();
+        progHtml = '<span class="logro-prog">' + formatNumero(Math.min(p[0], p[1])) + " / " + formatNumero(p[1]) + "</span>";
+      }
+      filas +=
+        '<div class="logro-fila ' + (ok ? "on" : "off") + '">' +
+          '<div class="logro-emoji">' + (ok ? l.emoji : "🔒") + "</div>" +
+          '<div class="logro-info"><div class="logro-nombre">' + l.nombre + '</div><div class="logro-desc">' + l.desc + "</div></div>" +
+          '<div class="logro-der">' + (ok
+            ? '<span class="logro-premio">✓ +' + l.premio + "</span>"
+            : progHtml + '<span class="logro-premio pend">+' + l.premio + "</span>") + "</div>" +
+        "</div>";
+    });
+
+    const wrap = document.createElement("div");
+    wrap.innerHTML =
+      '<div class="stats-grid">' +
+        '<div class="stat-box"><div class="stat-num">' + stats.total + '</div><div class="stat-lbl">Partidas</div></div>' +
+        '<div class="stat-box"><div class="stat-num">' + pctVictorias + '%</div><div class="stat-lbl">Victorias</div></div>' +
+        '<div class="stat-box"><div class="stat-num">' + stats.mejorRachaVictorias + '</div><div class="stat-lbl">Mejor racha</div></div>' +
+        '<div class="stat-box"><div class="stat-num">' + formatNumero(stats.maxGanancia) + '</div><div class="stat-lbl">Mayor premio</div></div>' +
+      "</div>" +
+      '<div class="logros-resumen"><span>Desbloqueados: <b>' + hechos + " / " + total + "</b></span></div>" +
+      '<div class="barra"><div class="barra-fill" style="width:' + Math.round((hechos / total) * 100) + '%"></div></div>' +
+      '<div class="logros-lista">' + filas + "</div>";
+    panelBody.appendChild(wrap);
+  }
+
+  // Tarjetas de arriba del menú: racha + desafío + bono pendiente.
+  function crearBannerDiario() {
+    const d = asegurarDesafioDeHoy();
+    const def = defDesafio(d.id);
+    const est = calcularRacha();
+    const prog = Math.min(d.progreso, def.meta);
+    const pct = Math.round((prog / def.meta) * 100);
+    const rachaMostrar = est.pendiente ? est.mostrar : racha.racha;
+
+    const cont = document.createElement("div");
+    cont.className = "banner-diario";
+
+    const bDesafio = document.createElement("button");
+    bDesafio.className = "banner-btn";
+    bDesafio.innerHTML =
+      '<span class="banner-emoji">' + (d.completado ? "✅" : "🎯") + "</span>" +
+      '<span class="banner-cuerpo"><span class="banner-titulo">Desafío del día</span>' +
+      '<span class="banner-valor"></span>' +
+      '<span class="barra chica"><span class="barra-fill" style="width:' + pct + '%"></span></span></span>';
+    bDesafio.querySelector(".banner-valor").textContent = def.texto;
+    bDesafio.addEventListener("click", () => abrirJuego("desafio"));
+
+    const bRacha = document.createElement("button");
+    bRacha.className = "banner-btn corto" + (est.pendiente ? " bono" : "");
+    bRacha.innerHTML =
+      '<span class="banner-emoji">' + (est.pendiente ? "🎁" : "🔥") + "</span>" +
+      '<span class="banner-cuerpo"><span class="banner-titulo">' + (est.pendiente ? "Bono disponible" : "Racha") + "</span>" +
+      '<span class="banner-valor">' + (est.pendiente ? "+" + est.bonus + " ¡reclamá!" : rachaMostrar + (rachaMostrar === 1 ? " día" : " días")) + "</span></span>";
+    bRacha.addEventListener("click", () => {
+      if (est.pendiente) abrirModalBono();
+      else abrirJuego("desafio");
+    });
+
+    cont.appendChild(bDesafio);
+    cont.appendChild(bRacha);
+    return cont;
   }
 
   // ---------------- Rangos ----------------
@@ -1189,6 +1881,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
   const JUEGOS = [
     { id: "rango",   emoji: "📊",    nombre: "Ver mi rango",           detalle: "estado actual" },
     { id: "ranking", emoji: "🏆",    nombre: "Ranking Global",         detalle: "quién tiene más queques" },
+    { id: "desafio", emoji: "🎯",    nombre: "Desafío del día",        detalle: "misión diaria y tu racha" },
+    { id: "logros",  emoji: "🏅",    nombre: "Logros",                 detalle: "insignias y estadísticas" },
     { id: "numero",  emoji: "🔢",    nombre: "Adivina el número",      detalle: "1 al 20, 5 intentos" },
     { id: "rpt",     emoji: "✊✋✌️", nombre: "Piedra, papel o tijera", detalle: "contra la máquina" },
     { id: "ruleta",  emoji: "🎡",    nombre: "Ruleta",                 detalle: "color, número o paridad" },
@@ -1206,6 +1900,10 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     setTitulo("Elige un juego");
     mostrarVolver(false);
     panelBody.innerHTML = "";
+    juegoActual = null;
+    enMenu = true;
+
+    panelBody.appendChild(crearBannerDiario());
 
     const grid = document.createElement("div");
     grid.className = "grid-juegos";
@@ -1222,13 +1920,18 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     });
 
     panelBody.appendChild(grid);
+    verificarBonoDiario();
   }
 
   function abrirJuego(id) {
     mostrarVolver(true);
     panelBody.innerHTML = "";
+    juegoActual = id;
+    enMenu = false;
 
     switch (id) {
+      case "desafio":    pantallaDesafio(); break;
+      case "logros":     pantallaLogros(); break;
       case "numero":     juegoAdivinaNumero(); break;
       case "rpt":        juegoPiedraPapelTijera(); break;
       case "ruleta":     juegoRuleta(); break;
@@ -1351,6 +2054,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       if (tu === yo) {
         logMsg(log, "Empate. Nadie gana queque.", "warn");
         sonido.empate();
+        registrarResultado(juegoActual, 0);
       } else if ((tu === 0 && yo === 2) || (tu === 1 && yo === 0) || (tu === 2 && yo === 1)) {
         logMsg(log, "Ganaste! <b>+300</b> de queque.", "ok");
         sonido.ganar();
@@ -1766,6 +2470,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       } else if (tj === tc) {
         logMsg(log, "Empate. Recuperas tu apuesta.", "warn");
         sonido.empate();
+        registrarResultado(juegoActual, 0);
       } else {
         logMsg(log, "Gana la casa. <b>-" + apuesta + "</b>", "fail");
         sonido.perder();
@@ -1956,7 +2661,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       if (clase === "warn") sonido.empate();
       else if (clase === "fail") sonido.perder();
       else sonido.ganar();
-      sumarQueque(puntos);
+      sumarQueque(puntos, clase === "warn" ? { resultado: "empate" } : undefined);
       pintar();
       const btn = document.createElement("button");
       btn.className = "btn secundario";
@@ -2037,7 +2742,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     async function tirar() {
       controles.innerHTML = "";
       sonido.moneda();
-      sumarQueque(-COSTO_TRAGAMONEDAS);
+      sumarQueque(-COSTO_TRAGAMONEDAS, { sinEvento: true });
       logMsg(log, "Pagaste " + COSTO_TRAGAMONEDAS + " por la tirada, girando…");
 
       const resultados = [
