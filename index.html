@@ -1196,7 +1196,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
 
   function supabaseConfigurado() {
     return !!SUPABASE_URL && !!SUPABASE_ANON_KEY &&
-      SUPABASE_URL.indexOf("TU_SUPABASE_URL") !== 0 && SUPABASE_ANON_KEY.indexOf("TU_SUPABASE_ANON_KEY") !== 0;
+      SUPABASE_URL.indexOf("https://nxpmwliogxkllsxfmpcs.supabase.co") !== 0 && SUPABASE_ANON_KEY.indexOf("sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO") !== 0;
   }
 
   // Identidad anónima local, para cuando no hay login (caso Supabase/GitHub Pages).
@@ -2006,9 +2006,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
           '<div class="personal-etiqueta">TU NOMBRE EN EL RANKING GLOBAL</div>' +
           '<p class="personal-nota">' + (
             backendGlobal === "claude"
-              ? "Jugando desde claude.ai se usa el nombre real de tu perfil automáticamente; este campo no aplica acá."
-              : "Se usa cuando el ranking corre con Supabase (por ejemplo si hosteaste el juego en GitHub Pages)."
-          ) + "</p>" +
           '<div class="controles" id="nombreControles"></div>' +
         "</div>";
 
