@@ -269,6 +269,43 @@
   .ficha .nombre { font-weight: 600; font-size: 14px; display: block; margin-bottom: 4px; }
   .ficha .detalle { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
 
+  /* ---------- Sección "Tu progreso" (separada de la grilla de juegos) ---------- */
+  .progreso-seccion {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 14px 4px;
+    margin-bottom: 16px;
+  }
+  .progreso-etiqueta {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .grid-juegos.chica {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 460px) {
+    .grid-juegos.chica { grid-template-columns: repeat(2, 1fr); }
+  }
+  .ficha.chica {
+    background: var(--bg-inset);
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .ficha.chica .emoji { font-size: 19px; margin-bottom: 5px; }
+  .ficha.chica .nombre { font-size: 11.5px; margin-bottom: 2px; }
+  .ficha.chica .detalle { font-size: 9.5px; display: none; }
+
+  .seccion-separador {
+    height: 1px;
+    background: var(--line);
+    margin: 18px 0 14px;
+  }
+
   /* ---------- Log de juego (estilo consola) ---------- */
   .log {
     background: var(--bg-inset);
@@ -718,6 +755,100 @@
   .logro-premio { font-size: 12px; font-weight: 700; color: var(--green); }
   .logro-premio.pend { color: var(--caramel); }
 
+  /* ---------- Estadísticas por juego ---------- */
+  .stats-subtitulo {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 4px 0 8px;
+  }
+  .stats-juegos { display: flex; flex-direction: column; gap: 6px; }
+  .juego-stat-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 9px 12px;
+  }
+  .juego-stat-fila.sin-jugar { opacity: 0.55; }
+  .juego-stat-emoji { font-size: 20px; width: 26px; text-align: center; flex-shrink: 0; }
+  .juego-stat-info { flex: 1; min-width: 0; }
+  .juego-stat-nombre { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .juego-stat-vacio { font-size: 11px; color: var(--muted); }
+  .juego-stat-num {
+    font-size: 11.5px;
+    color: var(--muted);
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* ---------- Personalización ---------- */
+  .personal-seccion {
+    background: var(--bg-elevated);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .personal-etiqueta {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .personal-nota { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+  .avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+  }
+  @media (max-width: 460px) { .avatar-grid { grid-template-columns: repeat(4, 1fr); } }
+  .avatar-opcion {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-size: 20px;
+    padding: 8px 0;
+    cursor: pointer;
+  }
+  .avatar-opcion:hover { border-color: var(--caramel); }
+  .avatar-opcion.sel {
+    border-color: var(--caramel);
+    background: #2f2216;
+    box-shadow: 0 0 10px -3px var(--caramel);
+  }
+
+  /* ---------- Confeti ---------- */
+  .confeti-capa {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 90;
+  }
+  .confeti-pieza {
+    position: absolute;
+    top: -20px;
+    border-radius: 1px;
+    opacity: 0.95;
+    animation-name: caerConfeti;
+    animation-timing-function: cubic-bezier(0.15, 0.5, 0.5, 1);
+    animation-fill-mode: forwards;
+  }
+  @keyframes caerConfeti {
+    0% {
+      transform: translate(0, 0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--deriva), 100vh) rotate(var(--giro));
+      opacity: 0;
+    }
+  }
+
   /* ---------- Toasts ---------- */
   .toasts {
     position: fixed;
@@ -884,6 +1015,29 @@
     color: var(--bg);
     background: var(--caramel);
   }
+  .ranking-avatar-emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    background: var(--bg-inset);
+  }
+  .ranking-aviso-nombre {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .ranking-aviso-link {
+    background: none;
+    border: none;
+    color: var(--frosting);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+  .ranking-aviso-link:hover { color: var(--caramel); }
   .ranking-info {
     flex: 1;
     min-width: 0;
@@ -980,6 +1134,7 @@
 
 </div>
 
+<div class="confeti-capa" id="confeti"></div>
 <div class="toasts" id="toasts"></div>
 
 <script>
@@ -1033,6 +1188,8 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
   let supabaseClient = null;
   let miId = null;
   let miNombre = "";
+  let avatarEmoji = "";
+  try { avatarEmoji = localStorage.getItem("queque-avatar-emoji") || ""; } catch (e) {}
   let dbListo = false; // true una vez que intentamos conectar (con éxito o no)
   let dbWriteChain = Promise.resolve();
   let syncTimer = null;
@@ -1106,17 +1263,28 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     syncTimer = setTimeout(() => {
       if (backendGlobal === "claude") {
         const ref = dbNS.doc("leaderboard/" + miId);
+        const datos = { score: queque, ts: Date.now() };
+        if (avatarEmoji) datos.avatarEmoji = avatarEmoji;
         dbWriteChain = dbWriteChain
-          .then(() => ref.set({ score: queque, ts: Date.now() }))
+          .then(() => ref.set(datos))
           .catch(() => {});
       } else if (backendGlobal === "supabase") {
+        const base = {
+          id: miId,
+          name: miNombre || "Jugador anónimo",
+          score: queque,
+          updated_at: new Date().toISOString(),
+        };
+        const conAvatar = avatarEmoji ? Object.assign({}, base, { avatar_emoji: avatarEmoji }) : base;
         dbWriteChain = dbWriteChain
-          .then(() => supabaseClient.from("leaderboard").upsert({
-            id: miId,
-            name: miNombre || "Jugador anónimo",
-            score: queque,
-            updated_at: new Date().toISOString(),
-          }))
+          .then(async () => {
+            const r = await supabaseClient.from("leaderboard").upsert(conAvatar);
+            // si la tabla todavía no tiene la columna avatar_emoji, reintenta sin ella
+            // para no romper el guardado del puntaje por un campo opcional
+            if (r && r.error && avatarEmoji) {
+              await supabaseClient.from("leaderboard").upsert(base);
+            }
+          })
           .catch(() => {});
       }
     }, 700);
@@ -1208,6 +1376,50 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     osc.stop(t0 + duracion + 0.03);
   }
 
+  // ---------------- Celebración visual: confeti + vibración ----------------
+  // Se dispara sola cada vez que suena jackpot() o logro(); no hace falta
+  // llamarla a mano desde cada juego.
+  const COLORES_CONFETI = ["var(--caramel)", "var(--frosting)", "var(--green)", "var(--cyan)", "var(--magenta)"];
+
+  function vibrar(patron) {
+    try { if (navigator.vibrate) navigator.vibrate(patron); } catch (e) {}
+  }
+
+  function lanzarConfeti(cantidad) {
+    const capa = document.getElementById("confeti");
+    if (!capa) return;
+    for (let i = 0; i < cantidad; i++) {
+      const pieza = document.createElement("div");
+      pieza.className = "confeti-pieza";
+      const izq = Math.random() * 100;
+      const demora = Math.random() * 0.35;
+      const duracion = 1.5 + Math.random() * 1.1;
+      const giro = (Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 540);
+      const deriva = (Math.random() - 0.5) * 140;
+      const color = COLORES_CONFETI[i % COLORES_CONFETI.length];
+      const chico = Math.random() < 0.5;
+      pieza.style.left = izq + "%";
+      pieza.style.background = color;
+      pieza.style.width = (chico ? 6 : 9) + "px";
+      pieza.style.height = (chico ? 10 : 14) + "px";
+      pieza.style.animationDuration = duracion + "s";
+      pieza.style.animationDelay = demora + "s";
+      pieza.style.setProperty("--giro", giro + "deg");
+      pieza.style.setProperty("--deriva", deriva + "px");
+      capa.appendChild(pieza);
+      setTimeout(() => pieza.remove(), (duracion + demora) * 1000 + 200);
+    }
+  }
+
+  function celebrarJackpot() {
+    lanzarConfeti(46);
+    vibrar([30, 40, 30, 40, 60]);
+  }
+  function celebrarLogro() {
+    lanzarConfeti(20);
+    vibrar([25, 35, 25]);
+  }
+
   const sonido = {
     // victoria normal: arpegio corto ascendente
     ganar() {
@@ -1227,20 +1439,22 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     acierto() {
       tono(880, 0.09, "triangle", 0.1, 0);
     },
-    // premio grande: fanfarria de 5 notas
+    // premio grande: fanfarria de 5 notas + confeti + vibración
     jackpot() {
       [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((f, i) =>
         tono(f, 0.2, "square", 0.11, i * 0.075)
       );
+      celebrarJackpot();
     },
     // sonido neutro de "ficha"/moneda, para cobros que no son en sí un resultado
     moneda() {
       tono(1200, 0.05, "square", 0.06, 0);
       tono(900, 0.05, "square", 0.05, 0.05);
     },
-    // logro desbloqueado: cuatro notas agudas y brillantes, tipo campanita
+    // logro desbloqueado: cuatro notas agudas y brillantes + confeti chico
     logro() {
       [784, 988, 1175, 1568].forEach((f, i) => tono(f, 0.22, "triangle", 0.1, i * 0.09));
+      celebrarLogro();
     },
   };
 
@@ -1696,7 +1910,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     setTitulo("🏅 Logros");
     const total = LOGROS.length;
     const hechos = LOGROS.filter((l) => logros[l.id]).length;
-    const pctVictorias = stats.total ? Math.round((stats.victorias / stats.total) * 100) : 0;
 
     let filas = "";
     LOGROS.forEach((l) => {
@@ -1718,16 +1931,128 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
 
     const wrap = document.createElement("div");
     wrap.innerHTML =
-      '<div class="stats-grid">' +
-        '<div class="stat-box"><div class="stat-num">' + stats.total + '</div><div class="stat-lbl">Partidas</div></div>' +
-        '<div class="stat-box"><div class="stat-num">' + pctVictorias + '%</div><div class="stat-lbl">Victorias</div></div>' +
-        '<div class="stat-box"><div class="stat-num">' + stats.mejorRachaVictorias + '</div><div class="stat-lbl">Mejor racha</div></div>' +
-        '<div class="stat-box"><div class="stat-num">' + formatNumero(stats.maxGanancia) + '</div><div class="stat-lbl">Mayor premio</div></div>' +
-      "</div>" +
       '<div class="logros-resumen"><span>Desbloqueados: <b>' + hechos + " / " + total + "</b></span></div>" +
       '<div class="barra"><div class="barra-fill" style="width:' + Math.round((hechos / total) * 100) + '%"></div></div>' +
       '<div class="logros-lista">' + filas + "</div>";
     panelBody.appendChild(wrap);
+  }
+
+  // ---------------- Estadísticas personales ----------------
+  function cajaStat(num, lbl) {
+    return '<div class="stat-box"><div class="stat-num">' + num + '</div><div class="stat-lbl">' + lbl + "</div></div>";
+  }
+
+  function pantallaStats() {
+    setTitulo("📈 Mis Estadísticas");
+    const pctVictorias = stats.total ? Math.round((stats.victorias / stats.total) * 100) : 0;
+
+    const wrap = document.createElement("div");
+    wrap.innerHTML =
+      '<div class="stats-grid">' +
+        cajaStat(stats.total, "Partidas jugadas") +
+        cajaStat(pctVictorias + "%", "Victorias") +
+        cajaStat(stats.mejorRachaVictorias, "Mejor racha de victorias") +
+        cajaStat(formatNumero(stats.maxGanancia), "Mayor premio de una vez") +
+        cajaStat(stats.desafiosCompletados, "Desafíos completados") +
+        cajaStat(racha.mejor || 0, "Mejor racha de días") +
+      "</div>" +
+      '<div class="stats-subtitulo">Por juego</div>' +
+      '<div class="stats-juegos" id="statsJuegos"></div>';
+    panelBody.appendChild(wrap);
+
+    const cont = wrap.querySelector("#statsJuegos");
+    const filas = IDS_JUEGOS
+      .map((id) => {
+        const meta = JUEGOS.find((j) => j.id === id) || { emoji: "🎮", nombre: id };
+        const pj = stats.porJuego[id] || { jugadas: 0, ganadas: 0 };
+        return { id, meta, pj };
+      })
+      .sort((a, b) => b.pj.jugadas - a.pj.jugadas);
+
+    filas.forEach(({ meta, pj }) => {
+      const pct = pj.jugadas ? Math.round((pj.ganadas / pj.jugadas) * 100) : 0;
+      const fila = document.createElement("div");
+      fila.className = "juego-stat-fila" + (pj.jugadas === 0 ? " sin-jugar" : "");
+      fila.innerHTML =
+        '<div class="juego-stat-emoji">' + meta.emoji + "</div>" +
+        '<div class="juego-stat-info">' +
+          '<div class="juego-stat-nombre">' + meta.nombre + "</div>" +
+          (pj.jugadas
+            ? '<div class="barra chica"><div class="barra-fill" style="width:' + pct + '%"></div></div>'
+            : '<div class="juego-stat-vacio">Todavía no jugaste</div>') +
+        "</div>" +
+        '<div class="juego-stat-num">' + (pj.jugadas
+          ? pj.jugadas + " jug. · " + pct + "% ganadas"
+          : "—") + "</div>";
+      cont.appendChild(fila);
+    });
+  }
+
+  // ---------------- Personalización ----------------
+  const AVATARES_QUEQUE = ["🍰", "🧁", "🍩", "🍪", "🍫", "🍭", "🎂", "🧇", "🥐", "🍮", "🍯", "🍬", "🍡", "🥞", "🍦", "🧈"];
+
+  // Bloque de personalización (avatar + nombre), pensado para insertarse
+  // dentro de otra pantalla (vive dentro de Ranking Global) en vez de ser
+  // una pantalla propia.
+  function construirBloquePersonalizacion(contenedor) {
+    function render() {
+      contenedor.innerHTML =
+        '<div class="personal-seccion">' +
+          '<div class="personal-etiqueta">TU AVATAR EN EL RANKING GLOBAL</div>' +
+          '<p class="personal-nota">Reemplaza tu foto o inicial acá abajo. Se ve así para todos.</p>' +
+          '<div class="avatar-grid" id="avatarGrid"></div>' +
+        "</div>" +
+        '<div class="personal-seccion">' +
+          '<div class="personal-etiqueta">TU NOMBRE EN EL RANKING GLOBAL</div>' +
+          '<p class="personal-nota">' + (
+            backendGlobal === "claude"
+              ? "Jugando desde claude.ai se usa el nombre real de tu perfil automáticamente; este campo no aplica acá."
+              : "Se usa cuando el ranking corre con Supabase (por ejemplo si hosteaste el juego en GitHub Pages)."
+          ) + "</p>" +
+          '<div class="controles" id="nombreControles"></div>' +
+        "</div>";
+
+      const grid = contenedor.querySelector("#avatarGrid");
+      AVATARES_QUEQUE.forEach((e) => {
+        const b = document.createElement("button");
+        b.className = "avatar-opcion" + (avatarEmoji === e ? " sel" : "");
+        b.textContent = e;
+        b.title = "Usar este avatar";
+        b.addEventListener("click", () => {
+          const mismo = avatarEmoji === e;
+          avatarEmoji = mismo ? "" : e;
+          try { localStorage.setItem("queque-avatar-emoji", avatarEmoji); } catch (err) {}
+          programarSyncGlobal();
+          sonido.acierto();
+          if (!mismo) mostrarToast(e, "Avatar actualizado", "Así te van a ver en el Ranking Global.");
+          render();
+        });
+        grid.appendChild(b);
+      });
+
+      const nombreControles = contenedor.querySelector("#nombreControles");
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "Tu nombre";
+      input.maxLength = 24;
+      input.value = miNombre;
+      input.disabled = backendGlobal === "claude";
+      const btn = document.createElement("button");
+      btn.className = "btn secundario";
+      btn.textContent = "Guardar nombre";
+      btn.disabled = backendGlobal === "claude";
+      btn.addEventListener("click", () => {
+        miNombre = input.value.trim().slice(0, 24) || "Jugador anónimo";
+        guardarNombreLocal(miNombre);
+        programarSyncGlobal();
+        sonido.acierto();
+        mostrarToast("✏️", "Nombre guardado", miNombre);
+      });
+      nombreControles.appendChild(input);
+      nombreControles.appendChild(btn);
+    }
+
+    render();
   }
 
   // Tarjetas de arriba del menú: racha + desafío + bono pendiente.
@@ -1878,11 +2203,15 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
   // ================================================================
   // MENU PRINCIPAL
   // ================================================================
-  const JUEGOS = [
+  const SECCION_PROGRESO = [
     { id: "rango",   emoji: "📊",    nombre: "Ver mi rango",           detalle: "estado actual" },
     { id: "ranking", emoji: "🏆",    nombre: "Ranking Global",         detalle: "quién tiene más queques" },
     { id: "desafio", emoji: "🎯",    nombre: "Desafío del día",        detalle: "misión diaria y tu racha" },
-    { id: "logros",  emoji: "🏅",    nombre: "Logros",                 detalle: "insignias y estadísticas" },
+    { id: "logros",  emoji: "🏅",    nombre: "Logros",                 detalle: "insignias desbloqueables" },
+    { id: "stats",   emoji: "📈",    nombre: "Mis Estadísticas",       detalle: "tu historial de partidas" },
+  ];
+
+  const JUEGOS = [
     { id: "numero",  emoji: "🔢",    nombre: "Adivina el número",      detalle: "1 al 20, 5 intentos" },
     { id: "rpt",     emoji: "✊✋✌️", nombre: "Piedra, papel o tijera", detalle: "contra la máquina" },
     { id: "ruleta",  emoji: "🎡",    nombre: "Ruleta",                 detalle: "color, número o paridad" },
@@ -1896,21 +2225,12 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     { id: "plinko",  emoji: "🎯",    nombre: "Plinko del Queque",      detalle: "soltá la ficha y mirá dónde cae" },
   ];
 
-  function mostrarMenu() {
-    setTitulo("Elige un juego");
-    mostrarVolver(false);
-    panelBody.innerHTML = "";
-    juegoActual = null;
-    enMenu = true;
-
-    panelBody.appendChild(crearBannerDiario());
-
+  function crearGrillaFichas(lista, chica) {
     const grid = document.createElement("div");
-    grid.className = "grid-juegos";
-
-    JUEGOS.forEach((j) => {
+    grid.className = "grid-juegos" + (chica ? " chica" : "");
+    lista.forEach((j) => {
       const btn = document.createElement("button");
-      btn.className = "ficha";
+      btn.className = "ficha" + (chica ? " chica" : "");
       btn.innerHTML =
         '<span class="emoji">' + j.emoji + "</span>" +
         '<span class="nombre">' + j.nombre + "</span>" +
@@ -1918,8 +2238,28 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       btn.addEventListener("click", () => abrirJuego(j.id));
       grid.appendChild(btn);
     });
+    return grid;
+  }
 
-    panelBody.appendChild(grid);
+  function mostrarMenu() {
+    setTitulo("Elige un juego");
+    mostrarVolver(false);
+    panelBody.innerHTML = "";
+    juegoActual = null;
+    enMenu = true;
+
+    // Tarjeta separada: todo lo que no es "un juego" en sí (rango, ranking,
+    // desafío, logros, estadísticas) vive acá, aparte de la grilla de juegos.
+    const progreso = document.createElement("div");
+    progreso.className = "progreso-seccion";
+    progreso.innerHTML = '<div class="progreso-etiqueta">TU PROGRESO</div>';
+    progreso.appendChild(crearGrillaFichas(SECCION_PROGRESO, true));
+    panelBody.appendChild(progreso);
+
+    // El banner de desafío + racha sigue mostrándose junto a los juegos.
+    panelBody.appendChild(crearBannerDiario());
+
+    panelBody.appendChild(crearGrillaFichas(JUEGOS, false));
     verificarBonoDiario();
   }
 
@@ -1932,6 +2272,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     switch (id) {
       case "desafio":    pantallaDesafio(); break;
       case "logros":     pantallaLogros(); break;
+      case "stats":      pantallaStats(); break;
       case "numero":     juegoAdivinaNumero(); break;
       case "rpt":        juegoPiedraPapelTijera(); break;
       case "ruleta":     juegoRuleta(); break;
@@ -3313,30 +3654,16 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
 
     function renderCajaDeNombre() {
       nombreBox.innerHTML = "";
-      // Solo hace falta pedir un nombre cuando el backend es Supabase:
-      // con la capacidad de Claude, el nombre lo resuelve user.profiles().
+      // Solo aplica cuando el backend es Supabase: con la capacidad de
+      // Claude, el nombre lo resuelve user.profiles() automáticamente.
       if (backendGlobal !== "supabase") return;
 
-      const fila = crearControles();
-      const input = document.createElement("input");
-      input.type = "text";
-      input.placeholder = "Tu nombre para el ranking";
-      input.value = miNombre;
-      input.maxLength = 24;
-
-      const btnGuardar = document.createElement("button");
-      btnGuardar.className = "btn secundario";
-      btnGuardar.textContent = "Guardar nombre";
-      btnGuardar.addEventListener("click", () => {
-        miNombre = input.value.trim().slice(0, 24) || "Jugador anónimo";
-        guardarNombreLocal(miNombre);
-        programarSyncGlobal();
-        logMsg(log, "Nombre guardado como <b>" + miNombre + "</b>.", "ok");
-      });
-
-      fila.appendChild(input);
-      fila.appendChild(btnGuardar);
-      nombreBox.appendChild(fila);
+      const aviso = document.createElement("div");
+      aviso.className = "ranking-aviso-nombre";
+      aviso.innerHTML = miNombre
+        ? "Jugás como <b>" + miNombre + "</b>. Podés cambiarlo más abajo, en Personalización."
+        : "Todavía no elegiste un nombre. Elegí uno más abajo, en Personalización.";
+      nombreBox.appendChild(aviso);
     }
 
     async function cargar() {
@@ -3393,6 +3720,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
             score: typeof data.score === "number" ? data.score : 0,
             avatarUrl: perfil && perfil.avatarUrl,
             color: perfil && perfil.color,
+            avatarEmoji: data.avatarEmoji || "",
           };
         });
       } else if (backendGlobal === "supabase") {
@@ -3423,6 +3751,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
           id: row.id,
           name: row.name || "",
           score: typeof row.score === "number" ? row.score : 0,
+          avatarEmoji: row.avatar_emoji || "",
         }));
       }
 
@@ -3444,13 +3773,17 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
         posicion.textContent = medallas[i] || String(i + 1);
 
         let avatarEl;
-        if (f.avatarUrl) {
+        if (f.avatarEmoji) {
+          avatarEl = document.createElement("div");
+          avatarEl.className = "ranking-avatar ranking-avatar-emoji";
+          avatarEl.textContent = f.avatarEmoji;
+        } else if (f.avatarUrl) {
           avatarEl = document.createElement("img");
           avatarEl.className = "ranking-avatar";
           avatarEl.alt = "";
           avatarEl.src = f.avatarUrl;
         } else {
-          // Sin capacidad de perfiles (caso Supabase): un círculo con la inicial
+          // Sin foto ni avatar elegido: un círculo con la inicial
           avatarEl = document.createElement("div");
           avatarEl.className = "ranking-avatar ranking-avatar-inicial";
           avatarEl.textContent = (nombre.trim()[0] || "?").toUpperCase();
@@ -3499,6 +3832,19 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     controles.appendChild(btnActualizar);
 
     cargar();
+
+    // Personalización, integrada acá abajo en vez de ser una pantalla aparte.
+    const separadorPersonal = document.createElement("div");
+    separadorPersonal.className = "seccion-separador";
+    const tituloPersonal = document.createElement("div");
+    tituloPersonal.className = "stats-subtitulo";
+    tituloPersonal.textContent = "🎨 Personalización";
+    const bloquePersonal = document.createElement("div");
+
+    panelBody.appendChild(separadorPersonal);
+    panelBody.appendChild(tituloPersonal);
+    panelBody.appendChild(bloquePersonal);
+    construirBloquePersonalizacion(bloquePersonal);
   }
 
   // ================================================================
