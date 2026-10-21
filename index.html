@@ -1790,12 +1790,12 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     actualizarVolumenMusica();
   }
 
-  // ---------------- Música ambiental (sintetizada, en loop, bien suave) ----------------
-  // Un acorde suave por vez, con entrada y salida lentas para que nunca "pegue".
+  // ---------------- Música de fondo (chiptune estilo arcade, sintetizada) ----------------
   // Se controla con el mismo botón de sonido que los efectos de juego.
   let musicaIniciada = false;
   let musicaGainNode = null;
-  let musicaTimer = null;
+  let musicaArcade = null;
+  const MUSICA_VOLUMEN = 0.11;
 
   // Asegura el AudioContext SIN apagarlo por el mute (a diferencia de
   // obtenerAudioCtx, que sí respeta sonidoActivo para los efectos puntuales);
@@ -1811,57 +1811,156 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     }
   }
 
+  // Música de fondo estilo arcade (chiptune): melodía de onda cuadrada, bajo
+  // triangular, arpegio suave y batería hecha con ruido. Se agenda "con
+  // anticipación" sobre el reloj del AudioContext para que no se desfase.
+  // Cada dos vueltas sube un tono (como en los juegos de 8 bits).
+  function crearMusicaArcade(ctx, destino) {
+    const BPM = 132;
+    const PASO = 60 / BPM / 4; // una semicorchea
+    const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+
+    // 8 compases (C - Am - F - G - C - Am - F - G), 8 corcheas por compás
+    const acordes = [
+      { raiz: 48, notas: [60, 64, 67] }, // C
+      { raiz: 45, notas: [57, 60, 64] }, // Am
+      { raiz: 41, notas: [57, 60, 65] }, // F
+      { raiz: 43, notas: [59, 62, 67] }, // G
+      { raiz: 48, notas: [60, 64, 67] },
+      { raiz: 45, notas: [57, 60, 64] },
+      { raiz: 41, notas: [57, 60, 65] },
+      { raiz: 43, notas: [59, 62, 67] },
+    ];
+    const N = null;
+    const melodia = [
+      [76, 76, 79, 76, 72, 76, 79, N],
+      [81, 79, 76, 79, 81, 79, 76, N],
+      [77, 81, 84, 81, 77, 81, 84, N],
+      [79, 83, 86, 83, 79, 83, 86, N],
+      [84, N, 79, N, 76, 79, 84, N],
+      [81, N, 76, N, 72, 76, 81, N],
+      [77, 79, 81, 84, 81, 79, 77, N],
+      [79, 79, 83, 83, 86, N, 83, 79],
+    ];
+    const bajoOffsets = [0, 0, 12, 0, 0, 0, 7, 12];
+
+    // un poco de ruido blanco reutilizable para platillos y caja
+    const ruidoBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
+    const datos = ruidoBuf.getChannelData(0);
+    for (let i = 0; i < datos.length; i++) datos[i] = Math.random() * 2 - 1;
+
+    function nota(tipo, freq, t, dur, vol, atk) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = tipo;
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(vol, t + (atk || 0.006));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(destino);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+    function bombo(t) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(150, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+      g.gain.setValueAtTime(0.6, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      o.connect(g); g.connect(destino);
+      o.start(t); o.stop(t + 0.2);
+    }
+    function ruido(t, dur, vol, hpf) {
+      const s = ctx.createBufferSource();
+      s.buffer = ruidoBuf;
+      const f = ctx.createBiquadFilter();
+      f.type = "highpass"; f.frequency.value = hpf;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(f); f.connect(g); g.connect(destino);
+      s.start(t, Math.random() * 0.3); s.stop(t + dur + 0.02);
+    }
+
+    // programa un paso (semicorchea) global: 0 .. infinito
+    function programarPaso(paso, t) {
+      const enCompas = paso % 16;
+      const compas = Math.floor(paso / 16) % 8;
+      const vuelta = Math.floor(paso / (16 * 8));
+      const transp = vuelta % 2 === 1 ? 2 : 0;
+      const ac = acordes[compas];
+
+      // melodía y bajo en corcheas (pasos pares)
+      if (enCompas % 2 === 0) {
+        const i = enCompas / 2;
+        const m = melodia[compas][i];
+        if (m !== null) nota("square", midi(m + transp), t, PASO * 1.8, 0.24, 0.004);
+        nota("triangle", midi(ac.raiz + bajoOffsets[i] + transp), t, PASO * 1.7, 0.42, 0.006);
+      }
+      // arpegio suave en las semicorcheas impares
+      if (enCompas % 2 === 1) {
+        const n = ac.notas[(enCompas >> 1) % 3] + 12;
+        nota("square", midi(n + transp), t, PASO * 0.9, 0.05, 0.003);
+      }
+      // batería
+      if (enCompas === 0 || enCompas === 8) bombo(t);
+      if (enCompas === 4 || enCompas === 12) ruido(t, 0.09, 0.2, 1500);
+      if (enCompas % 2 === 0) ruido(t, 0.025, 0.05, 7000);
+    }
+
+    let paso = 0;
+    let proximo = 0;
+    let timer = null;
+
+    // agenda todo lo que caiga antes de tFin (en tiempo del AudioContext)
+    function agendarHasta(tFin) {
+      while (proximo < tFin) {
+        programarPaso(paso, proximo);
+        paso++;
+        proximo += PASO;
+      }
+    }
+
+    return {
+      PASO,
+      programarPaso,
+      agendarHasta,
+      iniciar() {
+        proximo = ctx.currentTime + 0.1;
+        agendarHasta(ctx.currentTime + 0.3);
+        timer = setInterval(() => {
+          // si la pestaña estuvo dormida, retomo desde "ahora" en vez de ponerme al día
+          if (proximo < ctx.currentTime - 0.3) proximo = ctx.currentTime + 0.05;
+          agendarHasta(ctx.currentTime + 0.3);
+        }, 80);
+      },
+      detener() { if (timer) clearInterval(timer); timer = null; },
+    };
+  }
+
   function iniciarMusicaAmbiente() {
     if (musicaIniciada) return;
     const ctx = asegurarAudioCtxParaMusica();
     if (!ctx) return;
     musicaIniciada = true;
 
+    // volumen general (lo mueve el botón de sonido) + filtro que suaviza las ondas cuadradas
     musicaGainNode = ctx.createGain();
-    musicaGainNode.gain.value = sonidoActivo ? 0.05 : 0;
+    musicaGainNode.gain.value = sonidoActivo ? MUSICA_VOLUMEN : 0;
+    const suavizar = ctx.createBiquadFilter();
+    suavizar.type = "lowpass";
+    suavizar.frequency.value = 5500;
+    suavizar.connect(musicaGainNode);
     musicaGainNode.connect(ctx.destination);
 
-    // Progresión de acordes suaves (Am7 - Fmaj7 - Cmaj7 - G), como para
-    // acompañar de fondo sin llamar la atención.
-    const progresion = [
-      [220.00, 261.63, 329.63, 392.00],
-      [174.61, 220.00, 261.63, 349.23],
-      [130.81, 164.81, 196.00, 246.94],
-      [196.00, 246.94, 293.66, 369.99],
-    ];
-    let paso = 0;
-    const duracionAcorde = 5.4;
-
-    function tocarAcorde() {
-      if (!audioCtx) return;
-      const ahora = audioCtx.currentTime;
-      const frecs = progresion[paso % progresion.length];
-
-      frecs.forEach((f, i) => {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.type = i === 0 ? "sine" : "triangle";
-        osc.frequency.value = f;
-        // entrada y salida largas: nada de clics, todo muy de fondo
-        g.gain.setValueAtTime(0, ahora);
-        g.gain.linearRampToValueAtTime(0.85 / frecs.length, ahora + 1.8);
-        g.gain.linearRampToValueAtTime(0, ahora + duracionAcorde);
-        osc.connect(g);
-        g.connect(musicaGainNode);
-        osc.start(ahora);
-        osc.stop(ahora + duracionAcorde + 0.1);
-      });
-
-      paso++;
-      musicaTimer = setTimeout(tocarAcorde, duracionAcorde * 1000 * 0.9);
-    }
-
-    tocarAcorde();
+    musicaArcade = crearMusicaArcade(ctx, suavizar);
+    musicaArcade.iniciar();
   }
 
   function actualizarVolumenMusica() {
     if (!musicaGainNode || !audioCtx) return;
-    const objetivo = sonidoActivo ? 0.05 : 0;
+    const objetivo = sonidoActivo ? MUSICA_VOLUMEN : 0;
     musicaGainNode.gain.linearRampToValueAtTime(objetivo, audioCtx.currentTime + 0.5);
   }
 
@@ -1968,7 +2067,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
   // ---- bono por racha de victorias (solo juegos sin apuesta) ----
   // Equilibra los juegos de pago fijo frente a los de apuesta: cada victoria
   // consecutiva sube el multiplicador; al perder, la racha (y el bono) vuelve a cero.
-  const JUEGOS_SIN_APUESTA = ["numero", "rpt", "memoria", "triqui", "tragamonedas", "reflejos"];
+  const JUEGOS_SIN_APUESTA = ["numero", "rpt", "memoria", "triqui", "reflejos"];
 
   function multiplicadorRacha() {
     const r = stats.rachaVictorias;
@@ -2586,7 +2685,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     { cat: "apuesta", id: "blackjack",emoji: "🃏",   nombre: "Blackjack",              detalle: "contra la casa, hasta 21" },
     { cat: "gratis", id: "memoria", emoji: "🧠",    nombre: "Memoria de queque",      detalle: "8 rondas, no mires el historial" },
     { cat: "gratis", id: "triqui",  emoji: "⭕❌",  nombre: "Tres en raya",           detalle: "la máquina no es tonta" },
-    { cat: "gratis", id: "tragamonedas", emoji: "🎰", nombre: "Máquina de Queque",  detalle: "cuesta 100, tira de la palanca" },
+    { cat: "apuesta", id: "tragamonedas", emoji: "🎰", nombre: "Máquina de Queque",  detalle: "apostá y tirá, 3 🍰 pagan x25" },
     { cat: "apuesta", id: "minado",  emoji: "💣",    nombre: "Campo Minado",           detalle: "cada casilla segura suma más" },
     { cat: "gratis", id: "reflejos",emoji: "⚡",    nombre: "Reflejos",               detalle: "clic apenas diga ¡AHORA!" },
     { cat: "apuesta", id: "mayormenor", emoji: "🎴", nombre: "Mayor o Menor",         detalle: "subí la apuesta o retirate" },
@@ -3252,7 +3351,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       } else if (tipo === "numero") gano = (resultado === valor);
 
       if (gano) {
-        const premio = apuesta * pago;
+        const premio = apuesta * (pago - 1);
         logMsg(log, "Ganaste! <b>+" + premio + "</b> de queque.", "ok");
         if (pago >= 35) sonido.jackpot(); else sonido.ganar();
         sumarQueque(premio);
@@ -3807,7 +3906,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
   // ================================================================
   // JUEGO: MÁQUINA DE QUEQUE (tragamonedas)
   // ================================================================
-  const COSTO_TRAGAMONEDAS = 100;
+  const TRAGA_P_TORTA = 0.30;
+  const TRAGA_X3 = 25;   // x25 la apuesta con 3 tortas
+  const TRAGA_X2 = 1.5;  // x1.5 con 2 tortas
 
   function juegoTragamonedas() {
     setTitulo("🎰 Máquina de Queque");
@@ -3828,44 +3929,47 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
     maquina.innerHTML =
       '<div class="escena-titulo">✨ Máquina de Queque ✨</div>' +
       '<div class="chips-fila">' +
-        '<span class="chip-estado">🍰🍰🍰 <b>+5000</b></span>' +
-        '<span class="chip-estado">🍰🍰❌ <b>+500</b></span>' +
-        '<span class="chip-estado">otro <b style="color:var(--red)">-500</b></span>' +
+        '<span class="chip-estado">🍰🍰🍰 <b>x' + TRAGA_X3 + '</b></span>' +
+        '<span class="chip-estado">🍰🍰❌ <b>x' + TRAGA_X2 + '</b></span>' +
+        '<span class="chip-estado">otro <b style="color:var(--red)">pierdes la apuesta</b></span>' +
       '</div>';
     maquina.appendChild(rieles);
-    panelBody.appendChild(crearIndicadorRacha());
     panelBody.appendChild(maquina);
     panelBody.appendChild(log);
     panelBody.appendChild(controles);
 
-    logMsg(log, "Cada tirada cuesta <b>" + COSTO_TRAGAMONEDAS + "</b> de queque. ¡Tres 🍰 y es jackpot!", "info");
+    logMsg(log, "Apostá lo que quieras y tirá de la palanca. ¡Tres 🍰 pagan x" + TRAGA_X3 + "!", "info");
 
     function renderJugar() {
       controles.innerHTML = "";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.placeholder = "apuesta";
       const btn = document.createElement("button");
       btn.className = "btn";
-      btn.textContent = "🎰 Tirar de la palanca (-" + COSTO_TRAGAMONEDAS + ")";
-      if (queque < COSTO_TRAGAMONEDAS) {
-        logMsg(log, "Te faltan queques para jugar (necesitás al menos " + COSTO_TRAGAMONEDAS + ").", "fail");
-        btn.disabled = true;
-      }
-      btn.addEventListener("click", tirar);
+      btn.textContent = "🎰 Tirar de la palanca";
+      btn.addEventListener("click", () => {
+        const v = leerNumero(input.value);
+        if (Number.isNaN(v) || v <= 0 || v > queque) {
+          logMsg(log, "Apuesta inválida (tienes " + formatNumero(queque) + ").", "fail");
+          return;
+        }
+        recordarApuesta(v);
+        tirar(v);
+      });
+      controles.appendChild(input);
+      controles.appendChild(crearBotonAllIn(input));
+      controles.appendChild(crearBotonRepetir(input));
       controles.appendChild(btn);
     }
 
-    async function tirar() {
+    async function tirar(apuesta) {
       controles.innerHTML = "";
       sonido.moneda();
-      sumarQueque(-COSTO_TRAGAMONEDAS, { sinEvento: true });
-      logMsg(log, "Pagaste " + COSTO_TRAGAMONEDAS + " por la tirada, girando…");
+      logMsg(log, "Apostaste " + formatNumero(apuesta) + ", girando…");
 
-      const resultados = [
-        Math.random() < 0.42 ? "🍰" : "❌",
-        Math.random() < 0.42 ? "🍰" : "❌",
-        Math.random() < 0.42 ? "🍰" : "❌",
-      ];
+      const resultados = [0, 1, 2].map(() => Math.random() < TRAGA_P_TORTA ? "🍰" : "❌");
 
-      // cada rodillo gira y frena en orden, como en una tragamonedas de verdad
       for (let i = 0; i < 3; i++) {
         const vueltas = 10 + i * 5;
         for (let v = 0; v < vueltas; v++) {
@@ -3876,24 +3980,22 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       }
 
       const cakes = resultados.filter((s) => s === "🍰").length;
-      let premio;
+      let neto;
       if (cakes === 3) {
-        const b = conBonoRacha(5000);
-        premio = b.premio;
-        logMsg(log, resultados.join(" ") + " → <b>+" + premio + "</b>! Jackpot de queque." + b.bonoTexto, "ok");
+        neto = Math.floor(apuesta * (TRAGA_X3 - 1));
+        logMsg(log, resultados.join(" ") + " → <b>+" + formatNumero(neto) + "</b>! Jackpot de queque.", "ok");
         sonido.jackpot();
       } else if (cakes === 2) {
-        const b = conBonoRacha(500);
-        premio = b.premio;
-        logMsg(log, resultados.join(" ") + " → <b>+" + premio + "</b>." + b.bonoTexto, "ok");
+        neto = Math.floor(apuesta * (TRAGA_X2 - 1));
+        logMsg(log, resultados.join(" ") + " → <b>+" + formatNumero(neto) + "</b>.", "ok");
         sonido.ganar();
       } else {
-        premio = -500;
-        logMsg(log, resultados.join(" ") + " → <b>-500</b>.", "fail");
+        neto = -apuesta;
+        logMsg(log, resultados.join(" ") + " → <b>-" + formatNumero(apuesta) + "</b>.", "fail");
         sonido.perder();
       }
 
-      sumarQueque(premio);
+      sumarQueque(neto);
       renderJugar();
     }
 
@@ -3988,7 +4090,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
         if (descubiertas > 0) {
           const btnRetirar = document.createElement("button");
           btnRetirar.className = "btn";
-          btnRetirar.textContent = "💰 Retirar (+" + premioActual + ")";
+          btnRetirar.textContent = "💰 Retirar (+" + Math.max(0, premioActual - apuesta) + ")";
           btnRetirar.addEventListener("click", () => retirar(premioActual));
           controles.appendChild(btnRetirar);
         }
@@ -4029,9 +4131,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
           terminado = true;
           const premio = Math.floor(apuesta * multiplicador);
           celdas.forEach((c) => (c.disabled = true));
-          logMsg(log, "¡Encontraste todas las casillas seguras! <b>+" + premio + "</b>", "ok");
+          logMsg(log, "¡Encontraste todas las casillas seguras! <b>+" + (premio - apuesta) + "</b>", "ok");
           sonido.jackpot();
-          sumarQueque(premio);
+          sumarQueque(premio - apuesta);
           finDePartida();
           return;
         }
@@ -4044,9 +4146,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       function retirar(premio) {
         terminado = true;
         celdas.forEach((c) => (c.disabled = true));
-        logMsg(log, "Te retirás con <b>+" + premio + "</b> de queque.", "ok");
+        logMsg(log, "Te retirás con <b>+" + (premio - apuesta) + "</b> de queque.", "ok");
         sonido.ganar();
-        sumarQueque(premio);
+        sumarQueque(premio - apuesta);
         finDePartida();
       }
 
@@ -4220,17 +4322,17 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
           if (esMayor && v > actual.valor) favorables++;
           if (!esMayor && v < actual.valor) favorables++;
         }
-        return favorables / 13;
+        return favorables / 12;
       }
 
       function renderControlesJuego() {
         controles.innerHTML = "";
         const btnMayor = document.createElement("button");
         btnMayor.className = "btn";
-        btnMayor.textContent = "▲ Mayor (" + Math.round(probabilidad(true) * 100) + "%)";
+        btnMayor.textContent = "▲ Mayor (" + Math.min(100, Math.round(probabilidad(true) * 100)) + "%)";
         const btnMenor = document.createElement("button");
         btnMenor.className = "btn secundario";
-        btnMenor.textContent = "▼ Menor (" + Math.round(probabilidad(false) * 100) + "%)";
+        btnMenor.textContent = "▼ Menor (" + Math.min(100, Math.round(probabilidad(false) * 100)) + "%)";
 
         btnMayor.addEventListener("click", () => jugar(true));
         btnMenor.addEventListener("click", () => jugar(false));
@@ -4242,7 +4344,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
           const premioActual = Math.floor(apuesta * multiplicador);
           const btnRetirar = document.createElement("button");
           btnRetirar.className = "btn secundario";
-          btnRetirar.textContent = "💰 Retirar (+" + premioActual + ")";
+          btnRetirar.textContent = "💰 Retirar (+" + Math.max(0, premioActual - apuesta) + ")";
           btnRetirar.addEventListener("click", () => retirar(premioActual));
           controles.appendChild(btnRetirar);
         }
@@ -4271,7 +4373,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
         }
 
         const prob = probabilidad(esMayor);
-        multiplicador = multiplicador * (prob > 0 ? (0.95 / prob) : 1);
+        multiplicador = multiplicador * (prob > 0 ? Math.max(0.95 / prob, 1) : 1);
         rondas++;
         actual = siguiente;
 
@@ -4281,9 +4383,9 @@ const SUPABASE_ANON_KEY = "sb_publishable_iWRnMfiGnluWnGA3KKWIUA_hv_UxhoO";
       }
 
       function retirar(premio) {
-        logMsg(log, "Te retirás con <b>+" + premio + "</b> de queque.", "ok");
+        logMsg(log, "Te retirás con <b>+" + (premio - apuesta) + "</b> de queque.", "ok");
         sonido.ganar();
-        sumarQueque(premio);
+        sumarQueque(premio - apuesta);
         finDeRonda();
       }
 
